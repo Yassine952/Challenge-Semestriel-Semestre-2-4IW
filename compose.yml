@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  client:
+    image: node:20.0.0-alpine
+    user: node
+    entrypoint: sh -c
+    working_dir: /home/node
+    command: "npm install && npm run dev"
+    ports:
+      - 5173:5173
+    volumes:
+      - ./client:/home/node
+
+  server:
+    image: node:20.0.0-alpine
+    user: node
+    tty: true
+    stdin_open: true
+    working_dir: /home/node
+    entrypoint: sh -c
+    command: "npm install && npm run dev"
+    ports:
+      - 8000:8000
+    volumes:
+      - ./server:/home/node
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6.0
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
