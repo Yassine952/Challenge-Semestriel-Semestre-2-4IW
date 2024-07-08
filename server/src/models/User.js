@@ -1,18 +1,31 @@
-import mongoose from "mongoose";
+// server/src/models/User.js
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js'; // Assurez-vous que le chemin est correct
 
-const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  isConfirmed: { type: Boolean, default: false },
-  passwordChangedAt: { type: Date },
-  loginAttempts: { type: Number, default: 0 },
-  lockUntil: { type: Date },
-}, { timestamps: true });
-
-userSchema.methods.isLocked = function() {
-  return this.lockUntil && this.lockUntil > Date.now();
-};
-
-const User = mongoose.model("User", userSchema);
+const User = sequelize.define('User', {
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: {
+      isEmail: true,
+    },
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  isConfirmed: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  passwordLastChanged: {
+    type: DataTypes.DATE,
+  },
+  passwordNeedsReset: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+});
 
 export default User;

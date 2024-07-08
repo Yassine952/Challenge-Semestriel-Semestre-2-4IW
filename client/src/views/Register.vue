@@ -1,57 +1,78 @@
 <template>
-    <div class="register">
-      <h1>Register</h1>
-      <form @submit.prevent="register">
-        <div>
-          <label for="email">Email:</label>
-          <input type="email" v-model="email" required />
-        </div>
-        <div>
-          <label for="password">Password:</label>
-          <input type="password" v-model="password" required />
-        </div>
-        <button type="submit">Register</button>
-      </form>
-    </div>
-  </template>
-  
-  <script>
-  export default {
-    data() {
-      return {
-        email: '',
-        password: ''
-      };
-    },
-    methods: {
-      async register() {
-        console.log('API URL:', import.meta.env.VITE_API_URL);
-        try {
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              email: this.email,
-              password: this.password
-            })
-          });
-          const data = await response.json();
-          if (response.ok) {
-            alert('Registration successful! Please check your email to confirm your account.');
-          } else {
-            alert(`Registration failed: ${data.errors ? data.errors[0].msg : data.message}`);
-          }
-        } catch (error) {
-          alert(`Registration failed: ${error.message}`);
-        }
+  <div class="register">
+    <h1>Register</h1>
+    <form @submit.prevent="register">
+      <div>
+        <label for="email">Email:</label>
+        <input type="email" v-model="email" required />
+      </div>
+      <div>
+        <label for="password">Password:</label>
+        <input type="password" v-model="password" required />
+      </div>
+      <button type="submit">Register</button>
+    </form>
+    <p v-if="error" class="error">{{ error }}</p>
+  </div>
+</template>
+
+<script lang="ts">
+import { defineComponent, ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+export default defineComponent({
+  name: 'Register',
+  setup() {
+    const email = ref('');
+    const password = ref('');
+    const error = ref('');
+    const router = useRouter();
+
+    const register = async () => {
+      // Validation du mot de passe côté frontend
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+      if (!passwordRegex.test(password.value)) {
+        error.value = 'Password must be at least 12 characters long and include a mix of letters, numbers, and symbols.';
+        return;
       }
-    }
-  };
-  </script>
-  
-  <style scoped>
-  /* Ajoutez vos styles ici */
-  </style>
-  
+
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email.value,
+            password: password.value,
+          }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          alert('Registration successful! Please check your email to confirm your account.');
+          // Dispatch a custom event to notify about the login status change
+          window.dispatchEvent(new CustomEvent('loginStatusChanged'));
+          router.push('/login');
+        } else {
+          error.value = `Registration failed: ${data.errors ? data.errors[0].msg : data.message}`;
+        }
+      } catch (err) {
+        error.value = `Registration failed: ${err.message}`;
+      }
+    };
+
+    return {
+      email,
+      password,
+      error,
+      register,
+    };
+  },
+});
+</script>
+
+<style scoped>
+.error {
+  color: red;
+}
+</style>

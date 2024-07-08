@@ -21,32 +21,29 @@ services:
     volumes:
       - ./server:/home/node
     depends_on:
-      - mongo
+      - postgres
     environment:
-      MONGODB_URI: mongodb://admin:password@mongo:27017/mydatabase?authSource=admin
+      DATABASE_URL: postgres://admin:password@postgres:5432/mydatabase
 
-  mongo:
-    image: mongo
+  postgres:
+    image: postgres:latest
     restart: always
-    ports:
-      - '27017:27017'
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
     volumes:
-      - mongo-data:/data/db
-
-  mongo-express:
-    image: mongo-express:0.54.0
-    restart: always
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: password
-      ME_CONFIG_MONGODB_URL: mongodb://admin:password@mongo:27017/admin
+      - postgres-data:/var/lib/postgresql/data
     ports:
-      - '8081:8081'
+      - '5432:5432'
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - '8080:8080'
     depends_on:
-      - mongo
+      - postgres
 
 volumes:
-  mongo-data:
+  postgres-data:
