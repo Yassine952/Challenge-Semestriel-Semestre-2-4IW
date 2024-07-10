@@ -1,37 +1,22 @@
-// src/router/index.ts
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../views/Home.vue';
-import Register from '../views/Register.vue';
 import Login from '../views/Login.vue';
-import Search from '../components/Search.vue';
-import AdminPanel from '../components/AdminPanel.vue';
+import Register from '../views/Register.vue';
+import ProductList from '../views/ProductList.vue';
+import AddProduct from '../views/AddProduct.vue';
+import EditProduct from '../views/EditProduct.vue';
+import UserList from '../views/UserList.vue';
+import AdminPanel from '../views/AdminPanel.vue';
 
-const routes: Array<RouteRecordRaw> = [
-  {
-    path: '/',
-    name: 'Home',
-    component: Home
-  },
-  {
-    path: '/register',
-    name: 'Register',
-    component: Register
-  },
-  {
-    path: '/login',
-    name: 'Login',
-    component: Login
-  },
-  {
-    path: '/search',
-    name: 'Search',
-    component: Search
-  },
-  {
-    path: '/admin',
-    name: 'AdminPanel',
-    component: AdminPanel
-  }
+const routes = [
+  { path: '/', name: 'Home', component: Home },
+  { path: '/login', name: 'Login', component: Login },
+  { path: '/register', name: 'Register', component: Register },
+  { path: '/products', name: 'ProductList', component: ProductList },
+  { path: '/add-product', name: 'AddProduct', component: AddProduct },
+  { path: '/edit-product/:id', name: 'EditProduct', component: EditProduct },
+  { path: '/users', name: 'UserList', component: UserList },
+  { path: '/admin', name: 'AdminPanel', component: AdminPanel }
 ];
 
 const router = createRouter({

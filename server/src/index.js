@@ -1,4 +1,3 @@
-// server/src/index.js
 import express from 'express';
 import cors from 'cors';
 import { indexRouter } from './routes/index.js';
@@ -22,7 +21,7 @@ sequelize.authenticate()
   });
 
 // Utilisation du routeur
-server.use('/', indexRouter);
+server.use('/api', indexRouter);
 
 // Middleware de gestion des erreurs globales
 server.use((err, req, res, next) => {

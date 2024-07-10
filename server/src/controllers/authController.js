@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
 import nodemailer from 'nodemailer';
 import cron from 'node-cron';
+import sequelize from '../config/database.js';
 
 // Configuration du transporteur de courrier électronique
 const transporter = nodemailer.createTransport({

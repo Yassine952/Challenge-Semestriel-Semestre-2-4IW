@@ -4,7 +4,9 @@
       <li><router-link to="/">Home</router-link></li>
       <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
       <li v-if="!isLoggedIn"><router-link to="/register">Register</router-link></li>
-      <li v-if="isLoggedIn"><router-link to="/search">Search</router-link></li>
+      <li v-if="isLoggedIn"><router-link to="/products">Products</router-link></li>
+      <li v-if="isLoggedIn"><router-link to="/add-product">Add Product</router-link></li>
+      <li v-if="isLoggedIn"><router-link to="/users">Users</router-link></li>
       <li v-if="isLoggedIn"><router-link to="/admin">Admin Panel</router-link></li>
       <li v-if="isLoggedIn"><button @click="logout">Logout</button></li>
     </ul>

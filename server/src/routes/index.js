@@ -1,10 +1,10 @@
-import Router from "express";
-import { HelloController } from "../controllers/helloController.js";
-import authRoutes from "./auth.js";
-import productRoutes from "./product.js"
-export const indexRouter = Router();
+import express from 'express';
+import authRouter from './auth.js';
+import productRouter from './product.js';
 
-indexRouter.use("/api/auth", authRoutes);
-indexRouter.use('/api/products', productRoutes);  // Utilisez les routes des produits
+const router = express.Router();
 
-indexRouter.get("/", HelloController.index);
+router.use('/auth', authRouter);
+router.use('/products', productRouter);
+
+export { router as indexRouter };
