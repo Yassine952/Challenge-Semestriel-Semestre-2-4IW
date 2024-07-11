@@ -3,6 +3,8 @@ import Product from '../models/Product.js';
 
 const router = express.Router();
 
+router.get('/search', searchProducts); // Ajout de la route de recherche
+
 // Create a new product
 router.post('/', async (req, res) => {
   try {

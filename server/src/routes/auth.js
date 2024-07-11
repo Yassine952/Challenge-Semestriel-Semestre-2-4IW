@@ -28,10 +28,10 @@ router.post(
   resetPassword
 );
 
-router.get('/', getUsers);
-router.get('/:id', getUserById);
-router.post('/', createUser);
-router.put('/:id', updateUser);
-router.delete('/:id', deleteUser);
+router.get('/', getUsers); // Correction ici
+router.get('/:id', getUserById); // Correction ici
+router.post('/', createUser); // Correction ici
+router.put('/:id', updateUser); // Correction ici
+router.delete('/:id', deleteUser); // Correction ici
 
 export default router;

@@ -1,4 +1,5 @@
 import Product from '../models/Product.js';
+import { Op } from 'sequelize';
 
 export const createProduct = async (req, res) => {
   try {
@@ -52,6 +53,46 @@ export const deleteProduct = async (req, res) => {
     res.status(200).json({ message: 'Produit supprimé' });
   } catch (error) {
     console.error('Error deleting product:', error); // Ajout de log
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
+
+// Recherche de produits avec filtres
+export const searchProducts = async (req, res) => {
+  try {
+    const { name, description, category, brand, priceMin, priceMax, onSale, inStock } = req.query;
+
+    const whereClause = {};
+
+    if (name) {
+      whereClause.name = { [Op.like]: `%${name}%` };
+    }
+    if (description) {
+      whereClause.description = { [Op.like]: `%${description}%` };
+    }
+    if (category) {
+      whereClause.category = category;
+    }
+    if (brand) {
+      whereClause.brand = brand;
+    }
+    if (priceMin) {
+      whereClause.price = { ...whereClause.price, [Op.gte]: parseFloat(priceMin) };
+    }
+    if (priceMax) {
+      whereClause.price = { ...whereClause.price, [Op.lte]: parseFloat(priceMax) };
+    }
+    if (onSale) {
+      whereClause.onSale = onSale === 'true';
+    }
+    if (inStock) {
+      whereClause.stock = { [Op.gt]: 0 };
+    }
+
+    const products = await Product.findAll({ where: whereClause });
+    res.status(200).json(products);
+  } catch (error) {
+    console.error('Error searching products:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
