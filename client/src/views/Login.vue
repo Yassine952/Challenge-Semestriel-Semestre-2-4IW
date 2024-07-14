@@ -40,7 +40,9 @@ export default defineComponent({
             password: password.value,
           }),
         });
+
         const data = await response.json();
+
         if (response.ok) {
           localStorage.setItem('token', data.token);
           // Dispatch a custom event to notify about the login status change

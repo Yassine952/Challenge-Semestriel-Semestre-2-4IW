@@ -1,8 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import { indexRouter } from './routes/index.js';
-import authRouter from './routes/auth.js'; // Ajoutez cette ligne
+import authRouter from './routes/auth.js'; // Route d'authentification
+import productRouter from './routes/product.js'; // Route des produits
+import cartRouter from './routes/cart.js'; // Route du panier
 import sequelize from './config/database.js';
+import stripeRouter from './routes/stripe.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const server = express();
 
@@ -23,7 +29,10 @@ sequelize.authenticate()
 
 // Utilisation des routeurs
 server.use('/api', indexRouter);
-server.use('/api/users', authRouter); // Ajoutez cette ligne pour les routes d'authentification
+server.use('/api/auth', authRouter); // Routes d'authentification
+server.use('/api/products', productRouter); // Routes des produits
+server.use('/api/cart', cartRouter); // Routes du panier
+server.use('/api/stripe', stripeRouter); // Routes Stripe
 
 // Middleware de gestion des erreurs globales
 server.use((err, req, res, next) => {

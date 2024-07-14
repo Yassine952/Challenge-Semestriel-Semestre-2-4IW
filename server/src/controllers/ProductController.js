@@ -1,38 +1,42 @@
 import Product from '../models/Product.js';
 import { Op } from 'sequelize';
 
+// Créez un nouveau produit
 export const createProduct = async (req, res) => {
   try {
-    console.log('Creating product with data:', req.body); // Ajout de log
+    console.log('Creating product with data:', req.body);
     const product = await Product.create(req.body);
     res.status(201).json(product);
   } catch (error) {
-    console.error('Error creating product:', error); // Ajout de log
+    console.error('Error creating product:', error);
     res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 };
 
+// Obtenez tous les produits
 export const getProducts = async (req, res) => {
   try {
     const products = await Product.findAll();
     res.status(200).json(products);
   } catch (error) {
-    console.error('Error fetching products:', error); // Ajout de log
+    console.error('Error fetching products:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
 
+// Obtenez un produit par son ID
 export const getProductById = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
     res.status(200).json(product);
   } catch (error) {
-    console.error('Error fetching product:', error); // Ajout de log
+    console.error('Error fetching product:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
 
+// Mettez à jour un produit par son ID
 export const updateProduct = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
@@ -40,11 +44,12 @@ export const updateProduct = async (req, res) => {
     await product.update(req.body);
     res.status(200).json(product);
   } catch (error) {
-    console.error('Error updating product:', error); // Ajout de log
+    console.error('Error updating product:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
 
+// Supprimez un produit par son ID
 export const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
@@ -52,7 +57,7 @@ export const deleteProduct = async (req, res) => {
     await product.destroy();
     res.status(200).json({ message: 'Produit supprimé' });
   } catch (error) {
-    console.error('Error deleting product:', error); // Ajout de log
+    console.error('Error deleting product:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
@@ -60,7 +65,7 @@ export const deleteProduct = async (req, res) => {
 // Recherche de produits avec filtres
 export const searchProducts = async (req, res) => {
   try {
-    const { name, description, category, brand, priceMin, priceMax, onSale, inStock } = req.query;
+    const { name, description, category, priceMin, priceMax, inStock } = req.query;
 
     const whereClause = {};
 
@@ -73,20 +78,14 @@ export const searchProducts = async (req, res) => {
     if (category) {
       whereClause.category = category;
     }
-    if (brand) {
-      whereClause.brand = brand;
-    }
     if (priceMin) {
       whereClause.price = { ...whereClause.price, [Op.gte]: parseFloat(priceMin) };
     }
     if (priceMax) {
       whereClause.price = { ...whereClause.price, [Op.lte]: parseFloat(priceMax) };
     }
-    if (onSale) {
-      whereClause.onSale = onSale === 'true';
-    }
-    if (inStock) {
-      whereClause.stock = { [Op.gt]: 0 };
+    if (inStock !== undefined) {
+      whereClause.stock = inStock === 'true' ? { [Op.gt]: 0 } : { [Op.lte]: 0 };
     }
 
     const products = await Product.findAll({ where: whereClause });

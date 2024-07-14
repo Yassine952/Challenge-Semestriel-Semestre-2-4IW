@@ -10,7 +10,7 @@ const Product = sequelize.define('Product', {
     type: DataTypes.STRING,
   },
   price: {
-    type: DataTypes.INTEGER, // Change FLOAT to INTEGER
+    type: DataTypes.INTEGER,
     allowNull: false
   },
   stock: {
@@ -20,6 +20,10 @@ const Product = sequelize.define('Product', {
   category: {
     type: DataTypes.STRING,
     allowNull: false
+  },
+  onSale: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   }
 });
 

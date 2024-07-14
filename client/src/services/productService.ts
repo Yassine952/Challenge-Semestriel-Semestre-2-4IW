@@ -45,5 +45,6 @@ export const deleteProduct = async (id: number): Promise<void> => {
 export const searchProducts = async (queryParams: Record<string, any>): Promise<Product[]> => {
   const queryString = new URLSearchParams(queryParams).toString();
   const response = await apiClient.get(`/search?${queryString}`);
+  console.log('Search response:', response.data);  // Ajoutez cette ligne pour déboguer
   return response.data;
 };

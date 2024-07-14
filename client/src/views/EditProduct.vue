@@ -23,6 +23,10 @@
           <label for="category">Category:</label>
           <input type="text" v-model="product.category" required />
         </div>
+        <div>
+          <label for="onSale">On Sale:</label>
+          <input type="checkbox" v-model="product.onSale" />
+        </div>
         <button type="submit">Save</button>
       </div>
       <div v-else>

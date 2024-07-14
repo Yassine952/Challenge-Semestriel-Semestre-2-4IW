@@ -5,13 +5,16 @@ import { validationResult } from 'express-validator';
 import nodemailer from 'nodemailer';
 import cron from 'node-cron';
 import sequelize from '../config/database.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Configuration du transporteur de courrier électronique
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'challenges2iw@gmail.com',
-    pass: 'iecl wsac kllw xxjq'
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
 
@@ -35,8 +38,8 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = await User.create({ email, password: hashedPassword });
 
-    const token = jwt.sign({ userId: user.id }, 'your-jwt-secret', { expiresIn: '1d' });
-    const url = `http://localhost:8000/api/auth/confirm/${token}`;
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const url = `${process.env.BASE_URL}/api/auth/confirm/${token}`;
 
     await transporter.sendMail({
       to: email,
@@ -55,7 +58,7 @@ export const register = async (req, res) => {
 export const confirmEmail = async (req, res) => {
   try {
     const { token } = req.params;
-    const decoded = jwt.verify(token, 'your-jwt-secret');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findByPk(decoded.userId);
 
     if (!user) {
@@ -106,7 +109,7 @@ export const login = async (req, res) => {
     }
 
     loginAttempts[email] = { count: 0, lastAttempt: null };
-    const token = jwt.sign({ userId: user.id }, 'your-jwt-secret', { expiresIn: '1d' });
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
     res.status(200).json({ token });
   } catch (err) {
@@ -204,16 +207,18 @@ cron.schedule('0 0 * * *', async () => {
     const currentTime = Date.now();
 
     users.forEach(async (user) => {
-      const passwordAge = currentTime - new Date(user.passwordLastChanged).getTime();
-      if (passwordAge > 60 * 24 * 60 * 60 * 1000) { // 60 jours en millisecondes
-        user.passwordNeedsReset = true;
-        await user.save();
-        // Envoyer un email pour notifier l'utilisateur de changer son mot de passe
-        await transporter.sendMail({
-          to: user.email,
-          subject: 'Password Reset Required',
-          html: 'Your password needs to be reset. Please change your password.'
-        });
+      if (user.passwordLastChanged) {
+        const passwordAge = currentTime - new Date(user.passwordLastChanged).getTime();
+        if (passwordAge > 60 * 24 * 60 * 60 * 1000) { // 60 jours en millisecondes
+          user.passwordNeedsReset = true;
+          await user.save();
+          // Envoyer un email pour notifier l'utilisateur de changer son mot de passe
+          await transporter.sendMail({
+            to: user.email,
+            subject: 'Password Reset Required',
+            html: 'Your password needs to be reset. Please change your password.'
+          });
+        }
       }
     });
   } catch (err) {

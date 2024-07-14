@@ -10,6 +10,7 @@
           <th>Prix</th>
           <th>Stock</th>
           <th>Catégorie</th>
+          <th>En Vente</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -20,9 +21,11 @@
           <td>{{ product.price }}</td>
           <td>{{ product.stock }}</td>
           <td>{{ product.category }}</td>
+          <td>{{ product.onSale ? 'Oui' : 'Non' }}</td>
           <td>
             <router-link :to="`/edit-product/${product.id}`">Modifier</router-link>
             <button @click="deleteProduct(product.id)">Supprimer</button>
+            <button @click="addToCart(product.id)">Ajouter au panier</button>
           </td>
         </tr>
       </tbody>
@@ -34,6 +37,7 @@
 import { defineComponent, onMounted, ref } from 'vue';
 import { fetchProducts, deleteProduct } from '../services/productService';
 import { Product } from '../types/Product';
+import { addToCart } from '../services/cartService';
 
 export default defineComponent({
   name: 'ProductList',
@@ -49,11 +53,17 @@ export default defineComponent({
       loadProducts();
     };
 
+    const addToCartHandler = async (productId: number) => {
+      await addToCart({ productId, quantity: 1 });
+      alert('Produit ajouté au panier');
+    };
+
     onMounted(loadProducts);
 
     return {
       products,
       deleteProduct: removeProduct,
+      addToCart: addToCartHandler,
     };
   },
 });
