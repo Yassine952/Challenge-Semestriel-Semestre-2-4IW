@@ -9,6 +9,7 @@
       <li v-if="isLoggedIn"><router-link to="/users">Users</router-link></li>
       <li v-if="isLoggedIn"><router-link to="/admin">Admin Panel</router-link></li>
       <li v-if="isLoggedIn"><router-link to="/cart">Cart</router-link></li>
+      <li v-if="isLoggedIn"><router-link to="/profile">Profile</router-link></li>
       <li v-if="isLoggedIn"><button @click="logout">Logout</button></li>
     </ul>
     <div v-if="isLoggedIn" class="search-container">
@@ -26,8 +27,8 @@ export default defineComponent({
   name: 'Navbar',
   setup() {
     const router = useRouter();
-    const isLoggedIn = ref(!!localStorage.getItem('token'));
-    const searchQuery = ref('');
+    const isLoggedIn = ref<boolean>(!!localStorage.getItem('token'));
+    const searchQuery = ref<string>('');
 
     const logout = () => {
       localStorage.removeItem('token');
@@ -46,6 +47,7 @@ export default defineComponent({
     };
 
     onMounted(() => {
+      checkLoginStatus();
       window.addEventListener('loginStatusChanged', checkLoginStatus);
     });
 

@@ -28,7 +28,7 @@ export const register = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { email, password } = req.body;
+  const { firstName, lastName, email, password, shippingAddress } = req.body;
   try {
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
@@ -36,7 +36,7 @@ export const register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    const user = await User.create({ email, password: hashedPassword });
+    const user = await User.create({ firstName, lastName, email, password: hashedPassword, shippingAddress });
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     const url = `${process.env.BASE_URL}/api/auth/confirm/${token}`;

@@ -13,6 +13,7 @@
     "@stripe/stripe-js": "^4.1.0",
     "@vue-stripe/vue-stripe": "^4.5.0",
     "axios": "^1.7.2",
+    "jwt-decode": "^4.0.0",
     "vue": "^3.3.11",
     "vue-router": "^4.0.13",
     "vue-stripe": "^0.1.52"

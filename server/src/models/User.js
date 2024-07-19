@@ -1,8 +1,15 @@
-// server/src/models/User.js
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js'; // Assurez-vous que le chemin est correct
 
 const User = sequelize.define('User', {
+  firstName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  lastName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   email: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -25,6 +32,10 @@ const User = sequelize.define('User', {
   passwordNeedsReset: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
+  },
+  shippingAddress: {
+    type: DataTypes.STRING,
+    allowNull: false,
   },
 });
 

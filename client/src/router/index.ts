@@ -9,6 +9,7 @@ import UserList from '../views/UserList.vue';
 import AdminPanel from '../views/AdminPanel.vue';
 import ProductSearch from '../views/ProductSearch.vue'; // Importez le composant de recherche
 import Cart from '../views/Cart.vue';
+import Profile from '../views/Profile.vue'; // Importer le composant Profile
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -21,6 +22,7 @@ const routes = [
   { path: '/admin', name: 'AdminPanel', component: AdminPanel },
   { path: '/search', name: 'ProductSearch', component: ProductSearch }, // Ajoutez la route de recherche
   { path: '/cart', name: 'Cart', component: Cart },
+  { path: '/profile', name: 'Profile', component: Profile } // Ajouter la route Profile
 ];
 
 const router = createRouter({

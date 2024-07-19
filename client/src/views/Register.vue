@@ -3,12 +3,24 @@
     <h1>Register</h1>
     <form @submit.prevent="register">
       <div>
+        <label for="firstName">First Name:</label>
+        <input type="text" v-model="firstName" required />
+      </div>
+      <div>
+        <label for="lastName">Last Name:</label>
+        <input type="text" v-model="lastName" required />
+      </div>
+      <div>
         <label for="email">Email:</label>
         <input type="email" v-model="email" required />
       </div>
       <div>
         <label for="password">Password:</label>
         <input type="password" v-model="password" required />
+      </div>
+      <div>
+        <label for="shippingAddress">Shipping Address:</label>
+        <input type="text" v-model="shippingAddress" required />
       </div>
       <button type="submit">Register</button>
     </form>
@@ -23,8 +35,11 @@ import { useRouter } from 'vue-router';
 export default defineComponent({
   name: 'Register',
   setup() {
+    const firstName = ref('');
+    const lastName = ref('');
     const email = ref('');
     const password = ref('');
+    const shippingAddress = ref('');
     const error = ref('');
     const router = useRouter();
 
@@ -43,8 +58,11 @@ export default defineComponent({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            firstName: firstName.value,
+            lastName: lastName.value,
             email: email.value,
             password: password.value,
+            shippingAddress: shippingAddress.value
           }),
         });
         const data = await response.json();
@@ -62,8 +80,11 @@ export default defineComponent({
     };
 
     return {
+      firstName,
+      lastName,
       email,
       password,
+      shippingAddress,
       error,
       register,
     };

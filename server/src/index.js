@@ -1,11 +1,13 @@
+// src/index.js
 import express from 'express';
 import cors from 'cors';
 import { indexRouter } from './routes/index.js';
-import authRouter from './routes/auth.js'; // Route d'authentification
-import productRouter from './routes/product.js'; // Route des produits
-import cartRouter from './routes/cart.js'; // Route du panier
-import sequelize from './config/database.js';
+import authRouter from './routes/auth.js';
+import productRouter from './routes/product.js';
+import cartRouter from './routes/cart.js';
 import stripeRouter from './routes/stripe.js';
+import profileRouter from './routes/profile.js';
+import sequelize from './config/database.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -29,11 +31,11 @@ sequelize.authenticate()
 
 // Utilisation des routeurs
 server.use('/api', indexRouter);
-server.use('/api/auth', authRouter); // Routes d'authentification
-server.use('/api/products', productRouter); // Routes des produits
-server.use('/api/cart', cartRouter); // Routes du panier
-server.use('/api/stripe', stripeRouter); // Routes Stripe
-
+server.use('/api/auth', authRouter);
+server.use('/api/products', productRouter);
+server.use('/api/cart', cartRouter);
+server.use('/api/stripe', stripeRouter);
+server.use('/api/profile', profileRouter); // Ajout de la route profile
 // Middleware de gestion des erreurs globales
 server.use((err, req, res, next) => {
   console.error(err.stack);

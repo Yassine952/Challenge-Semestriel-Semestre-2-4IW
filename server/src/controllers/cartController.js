@@ -6,7 +6,7 @@ import User from '../models/User.js';
 // Obtenir le panier de l'utilisateur
 export const getCart = async (req, res) => {
   try {
-    const userId = req.user.userId; // Assurez-vous que l'utilisateur est authentifié
+    const userId = req.user.id; // Assurez-vous que l'utilisateur est authentifié
     if (!userId) {
       return res.status(400).json({ message: 'User ID is missing' });
     }
@@ -28,7 +28,7 @@ export const getCart = async (req, res) => {
 // Ajouter un produit au panier
 export const addToCart = async (req, res) => {
   const { productId, quantity } = req.body;
-  const userId = req.user.userId;
+  const userId = req.user.id;
 
   if (!userId) {
     return res.status(400).json({ message: 'User ID is missing' });
@@ -73,7 +73,7 @@ export const addToCart = async (req, res) => {
 // Supprimer un produit du panier
 export const removeFromCart = async (req, res) => {
   const { productId } = req.body;
-  const userId = req.user.userId;
+  const userId = req.user.id;
 
   if (!userId) {
     return res.status(400).json({ message: 'User ID is missing' });
@@ -103,7 +103,7 @@ export const removeFromCart = async (req, res) => {
 
 // Vider le panier
 export const clearCart = async (req, res) => {
-  const userId = req.user.userId;
+  const userId = req.user.id;
 
   if (!userId) {
     return res.status(400).json({ message: 'User ID is missing' });
