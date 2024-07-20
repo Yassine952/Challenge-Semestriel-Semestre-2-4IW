@@ -1,4 +1,3 @@
-<!-- src/views/Cart.vue -->
 <template>
   <div>
     <h1>Votre panier</h1>
@@ -22,7 +21,7 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue';
 import { getCart, removeFromCart, clearCart } from '../services/cartService';
-import { createCheckoutSession } from '../services/stripeService';
+import { createCheckoutSession, clearCartAfterPayment } from '../services/stripeService';
 import { loadStripe } from '@stripe/stripe-js';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -48,10 +47,14 @@ export default defineComponent({
 
     const handleCheckout = async () => {
       const stripe = await stripePromise;
+      await loadCart(); // Recharger le panier pour vérifier les articles expirés
       const session = await createCheckoutSession(cart.value.CartItems);
 
       if (stripe) {
-        stripe.redirectToCheckout({ sessionId: session.id });
+        const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
+        if (!error) {
+          await clearCartAfterPayment();
+        }
       }
     };
 

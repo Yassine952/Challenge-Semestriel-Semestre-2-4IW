@@ -1,4 +1,3 @@
-// models/CartItem.js
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 import Cart from './Cart.js';
@@ -29,7 +28,11 @@ const CartItem = sequelize.define('CartItem', {
   price: {
     type: DataTypes.FLOAT,
     allowNull: false
-  }
+  },
+  reservationExpiry: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
 });
 
 export default CartItem;

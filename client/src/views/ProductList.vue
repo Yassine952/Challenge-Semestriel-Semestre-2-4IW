@@ -25,7 +25,9 @@
           <td>
             <router-link :to="`/edit-product/${product.id}`">Modifier</router-link>
             <button @click="deleteProduct(product.id)">Supprimer</button>
-            <button @click="addToCart(product.id)">Ajouter au panier</button>
+            <button @click="addToCart(product.id)" :disabled="product.stock === 0">
+              {{ product.stock === 0 ? 'Stock épuisé' : 'Ajouter au panier' }}
+            </button>
           </td>
         </tr>
       </tbody>

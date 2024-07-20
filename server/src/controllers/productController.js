@@ -1,5 +1,7 @@
 import Product from '../models/Product.js';
 import { Op } from 'sequelize';
+import CartItem from '../models/CartItem.js';
+import Cart from '../models/Cart.js';
 
 // Créez un nouveau produit
 export const createProduct = async (req, res) => {
@@ -54,6 +56,19 @@ export const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
+
+    // Avant de supprimer le produit, mettons à jour les paniers
+    const cartItems = await CartItem.findAll({ where: { productId: product.id } });
+    
+    for (const item of cartItems) {
+      const cart = await Cart.findByPk(item.cartId);
+      if (cart) {
+        cart.totalPrice -= item.price;
+        await cart.save();
+        await item.destroy();
+      }
+    }
+
     await product.destroy();
     res.status(200).json({ message: 'Produit supprimé' });
   } catch (error) {

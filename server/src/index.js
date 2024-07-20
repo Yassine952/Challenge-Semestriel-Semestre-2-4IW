@@ -1,4 +1,3 @@
-// src/index.js
 import express from 'express';
 import cors from 'cors';
 import { indexRouter } from './routes/index.js';
@@ -9,6 +8,8 @@ import stripeRouter from './routes/stripe.js';
 import profileRouter from './routes/profile.js';
 import sequelize from './config/database.js';
 import dotenv from 'dotenv';
+import cron from 'node-cron';
+import { cleanExpiredItems } from './controllers/cartController.js';
 
 dotenv.config();
 
@@ -50,4 +51,13 @@ server.use((req, res) => {
 const port = process.env.PORT || 8000;
 server.listen(port, '0.0.0.0', () => {
   console.log(`Server listening on http://localhost:${port}`);
+});
+
+// Planifiez une tâche cron pour nettoyer les éléments expirés toutes les minutes
+cron.schedule('* * * * *', async () => {
+  try {
+    await cleanExpiredItems();
+  } catch (error) {
+    console.error('Error cleaning expired items:', error);
+  }
 });

@@ -1,4 +1,3 @@
-// services/cartService.ts
 import axios from 'axios';
 import { Cart } from '../types/Cart';
 
