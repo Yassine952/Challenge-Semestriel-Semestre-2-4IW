@@ -12,7 +12,6 @@ node_modules
 dist
 dist-ssr
 *.local
-../postgres/.env
 .env
 # Editor directories and files
 .vscode/*

@@ -30,6 +30,7 @@ export default defineComponent({
   name: 'Cart',
   setup() {
     const cart = ref<any | null>(null);
+    const errorMessage = ref<string | null>(null);
 
     const loadCart = async () => {
       cart.value = await getCart();
@@ -46,16 +47,21 @@ export default defineComponent({
     };
 
     const handleCheckout = async () => {
-      const stripe = await stripePromise;
-      loadCart();
-      const session = await createCheckoutSession(cart.value.CartItems);
+      try {
+        const stripe = await stripePromise;
+        await loadCart(); // Ensure cart is updated before checking out
+        const session = await createCheckoutSession(cart.value.CartItems);
 
-      if (stripe) {
-        const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
-        if (!error) {
-          await clearCartAfterPayment(); // Clear the cart after a successful payment
-          loadCart(); // Refresh the cart to show it's empty
+        if (stripe) {
+          const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
+          if (!error) {
+            await clearCartAfterPayment(); // Clear the cart after a successful payment
+            loadCart(); // Refresh the cart to show it's empty
+          }
         }
+      } catch (error: any) {
+        errorMessage.value = error.response?.data?.message || 'Erreur lors de la création de la session de paiement';
+        loadCart(); // Refresh the cart to reflect any expired items
       }
     };
 
@@ -63,6 +69,7 @@ export default defineComponent({
 
     return {
       cart,
+      errorMessage,
       removeFromCart: removeItem,
       clearCart: clearCartItems,
       handleCheckout,

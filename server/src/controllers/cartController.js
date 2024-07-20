@@ -4,7 +4,7 @@ import Product from '../models/Product.js';
 import { Op } from 'sequelize';
 import cron from 'node-cron';
 
-const RESERVATION_TIME = 1 * 60 * 1000; // 1 minute in milliseconds
+const RESERVATION_TIME = 1 * 60 * 1000; // 15 minutes in milliseconds
 
 export const cleanExpiredItems = async () => {
   const now = new Date();
@@ -181,6 +181,22 @@ export const clearCart = async (req, res) => {
   }
 };
 
+// Vérifier les articles expirés dans le panier
+export const checkExpiredCartItems = async (cartId) => {
+  const now = new Date();
+  const expiredItems = await CartItem.findAll({
+    where: {
+      cartId,
+      reservationExpiry: {
+        [Op.lt]: now,
+      },
+    },
+  });
+
+  return expiredItems.length > 0;
+};
+
+
 // Fonction pour vider le panier après un paiement réussi
 export const clearCartAfterPayment = async (req, res) => {
   const userId = req.user.id;
@@ -202,11 +218,13 @@ export const clearCartAfterPayment = async (req, res) => {
     for (const cartItem of cartItems) {
       const product = await Product.findByPk(cartItem.productId);
       console.log(`Updating stock for product ${product.id}`);
-      product.stock -= cartItem.quantity;
-      await product.save();
+      
+      // Ne pas soustraire le stock ici, car il a déjà été soustrait temporairement
+      // Donc, aucune mise à jour du stock ici
+      
+      await cartItem.destroy();
     }
 
-    await CartItem.destroy({ where: { cartId: cart.id } });
     cart.totalPrice = 0;
     await cart.save();
 

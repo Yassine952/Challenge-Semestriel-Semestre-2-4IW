@@ -2,27 +2,38 @@ import Stripe from 'stripe';
 import Cart from '../models/Cart.js';
 import CartItem from '../models/CartItem.js';
 import Product from '../models/Product.js';
+import { checkExpiredCartItems } from './cartController.js';
 
-// Mettre à jour pour utiliser la version d'API 2024-06-20
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2024-06-20',
 });
 
 export const createCheckoutSession = async (req, res) => {
   const { cartItems } = req.body;
-
-  const lineItems = cartItems.map(item => ({
-    price_data: {
-      currency: 'usd',
-      product_data: {
-        name: item.Product.name,
-      },
-      unit_amount: item.Product.price * 100, // Price in cents
-    },
-    quantity: item.quantity,
-  }));
+  const userId = req.user.id;
 
   try {
+    const cart = await Cart.findOne({ where: { userId } });
+    if (!cart) {
+      return res.status(404).json({ message: 'Panier non trouvé' });
+    }
+
+    const expiredItemsExist = await checkExpiredCartItems(cart.id);
+    if (expiredItemsExist) {
+      return res.status(400).json({ message: 'Certains articles de votre panier ont expiré. Veuillez actualiser votre panier.' });
+    }
+
+    const lineItems = cartItems.map(item => ({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: item.Product.name,
+        },
+        unit_amount: item.Product.price * 100, // Price in cents
+      },
+      quantity: item.quantity,
+    }));
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
@@ -65,12 +76,10 @@ export const handleStripeWebhook = async (req, res) => {
         for (const item of cart.CartItems) {
           const product = await Product.findByPk(item.productId);
           if (product) {
-            product.stock -= item.quantity;
-            await product.save();
+            await item.destroy();
           }
         }
 
-        await CartItem.destroy({ where: { cartId: cart.id } });
         cart.totalPrice = 0;
         await cart.save();
 

@@ -37,7 +37,6 @@ const CartItem = sequelize.define('CartItem', {
 
 export default CartItem;
 
-// Associez les modèles
 Cart.hasMany(CartItem, { foreignKey: 'cartId' });
 CartItem.belongsTo(Cart, { foreignKey: 'cartId' });
 Product.hasMany(CartItem, { foreignKey: 'productId' });
