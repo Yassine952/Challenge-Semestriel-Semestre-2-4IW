@@ -4,9 +4,8 @@ import { addToCart, getCart, removeFromCart, clearCart, clearCartAfterPayment } 
 
 const router = express.Router();
 
-
-
-router.use(authenticateToken); // Apply the middleware to all routes in this router
+// Apply the middleware to all routes in this router
+router.use(authenticateToken);
 
 router.get('/', getCart);
 router.post('/add', addToCart);

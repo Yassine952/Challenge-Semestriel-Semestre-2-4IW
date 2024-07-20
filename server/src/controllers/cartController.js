@@ -2,7 +2,7 @@ import Cart from '../models/Cart.js';
 import CartItem from '../models/CartItem.js';
 import Product from '../models/Product.js';
 import { Op } from 'sequelize';
-import { setTimeout } from 'timers/promises';
+import cron from 'node-cron';
 
 const RESERVATION_TIME = 1 * 60 * 1000; // 1 minute in milliseconds
 
@@ -30,6 +30,9 @@ export const cleanExpiredItems = async () => {
   }
 };
 
+// Planifier une tâche cron pour exécuter cleanExpiredItems toutes les minutes
+cron.schedule('* * * * *', cleanExpiredItems);
+
 // Obtenir le panier de l'utilisateur
 export const getCart = async (req, res) => {
   try {
@@ -45,10 +48,6 @@ export const getCart = async (req, res) => {
         include: [Product]
       }
     });
-
-    if (cart) {
-      await cleanExpiredItems(cart.id);
-    }
 
     res.status(200).json(cart);
   } catch (error) {
@@ -185,25 +184,33 @@ export const clearCart = async (req, res) => {
 // Fonction pour vider le panier après un paiement réussi
 export const clearCartAfterPayment = async (req, res) => {
   const userId = req.user.id;
+  console.log('clearCartAfterPayment called, userId:', userId);
 
   if (!userId) {
+    console.log('User ID is missing');
     return res.status(400).json({ message: 'User ID is missing' });
   }
 
   try {
     const cart = await Cart.findOne({ where: { userId } });
     if (!cart) {
+      console.log('Panier non trouvé');
       return res.status(404).json({ message: 'Panier non trouvé' });
     }
 
     const cartItems = await CartItem.findAll({ where: { cartId: cart.id } });
     for (const cartItem of cartItems) {
-      await cartItem.destroy();
+      const product = await Product.findByPk(cartItem.productId);
+      console.log(`Updating stock for product ${product.id}`);
+      product.stock -= cartItem.quantity;
+      await product.save();
     }
 
+    await CartItem.destroy({ where: { cartId: cart.id } });
     cart.totalPrice = 0;
     await cart.save();
 
+    console.log('Panier vidé après paiement réussi');
     res.status(200).json({ message: 'Panier vidé après paiement réussi' });
   } catch (error) {
     console.error('Error clearing cart after payment:', error);

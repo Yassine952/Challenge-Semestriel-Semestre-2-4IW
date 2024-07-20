@@ -47,13 +47,14 @@ export default defineComponent({
 
     const handleCheckout = async () => {
       const stripe = await stripePromise;
-      await loadCart(); // Recharger le panier pour vérifier les articles expirés
+      loadCart();
       const session = await createCheckoutSession(cart.value.CartItems);
 
       if (stripe) {
         const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
         if (!error) {
-          await clearCartAfterPayment();
+          await clearCartAfterPayment(); // Clear the cart after a successful payment
+          loadCart(); // Refresh the cart to show it's empty
         }
       }
     };
