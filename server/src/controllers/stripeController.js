@@ -1,11 +1,11 @@
-// src/controllers/stripeController.js
 import Stripe from 'stripe';
 import Cart from '../models/Cart.js';
 import CartItem from '../models/CartItem.js';
 import Product from '../models/Product.js';
 
+// Mettre à jour pour utiliser la version d'API 2024-06-20
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2020-08-27',
+  apiVersion: '2024-06-20',
 });
 
 export const createCheckoutSession = async (req, res) => {
@@ -29,6 +29,9 @@ export const createCheckoutSession = async (req, res) => {
       mode: 'payment',
       success_url: `${process.env.CLIENT_URL}/success`,
       cancel_url: `${process.env.CLIENT_URL}/cancel`,
+      metadata: {
+        userId: req.user.id, // Assuming req.user.id contains the authenticated user's ID
+      },
     });
 
     res.json({ id: session.id });
@@ -43,7 +46,8 @@ export const handleStripeWebhook = async (req, res) => {
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    console.log('Webhook received:', event.type);
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -53,17 +57,25 @@ export const handleStripeWebhook = async (req, res) => {
     const session = event.data.object;
 
     try {
+      console.log('Session data:', session);
+
       const cart = await Cart.findOne({ where: { userId: session.metadata.userId }, include: CartItem });
 
-      for (const item of cart.CartItems) {
-        const product = await Product.findByPk(item.productId);
-        product.stock -= item.quantity;
-        await product.save();
-      }
+      if (cart) {
+        for (const item of cart.CartItems) {
+          const product = await Product.findByPk(item.productId);
+          if (product) {
+            product.stock -= item.quantity;
+            await product.save();
+          }
+        }
 
-      await CartItem.destroy({ where: { cartId: cart.id } });
-      cart.totalPrice = 0;
-      await cart.save();
+        await CartItem.destroy({ where: { cartId: cart.id } });
+        cart.totalPrice = 0;
+        await cart.save();
+
+        console.log(`Cart for user ${session.metadata.userId} cleared and stock updated.`);
+      }
 
       res.status(200).json({ message: 'Cart cleared and stock updated' });
     } catch (error) {

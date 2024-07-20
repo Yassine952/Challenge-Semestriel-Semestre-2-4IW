@@ -10,12 +10,16 @@ import sequelize from './config/database.js';
 import dotenv from 'dotenv';
 import cron from 'node-cron';
 import { cleanExpiredItems } from './controllers/cartController.js';
+import bodyParser from 'body-parser';
 
 dotenv.config();
 
 const server = express();
 
 server.use(cors());
+
+// Utilisation de bodyParser.raw() pour les webhooks Stripe
+server.post('/api/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
 server.use(express.json());
 
 sequelize.authenticate()
@@ -37,6 +41,7 @@ server.use('/api/products', productRouter);
 server.use('/api/cart', cartRouter);
 server.use('/api/stripe', stripeRouter);
 server.use('/api/profile', profileRouter); // Ajout de la route profile
+
 // Middleware de gestion des erreurs globales
 server.use((err, req, res, next) => {
   console.error(err.stack);
