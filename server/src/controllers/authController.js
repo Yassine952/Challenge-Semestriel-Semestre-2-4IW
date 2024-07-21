@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
 import nodemailer from 'nodemailer';
 import cron from 'node-cron';
+import NodeCache from 'node-cache';
 import sequelize from '../config/database.js';
 import dotenv from 'dotenv';
 
@@ -20,6 +21,9 @@ const transporter = nodemailer.createTransport({
 
 // Temporisation après tentatives de connexion infructueuses
 let loginAttempts = {};
+
+// Cache pour les demandes de réinitialisation de mot de passe
+const passwordResetCache = new NodeCache({ stdTTL: 15 * 60, checkperiod: 60 }); // TTL de 15 minutes
 
 // Inscription de l'utilisateur avec confirmation par email
 export const register = async (req, res) => {
@@ -178,27 +182,71 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-// Réinitialisation du mot de passe de l'utilisateur
-export const resetPassword = async (req, res) => {
-  const { email, newPassword } = req.body;
+// Réinitialisation du mot de passe avec le token
+export const resetPasswordWithToken = async (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
-    const user = await User.findOne({ where: { email } });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findByPk(decoded.userId);
 
     if (!user) {
-      return res.status(400).json({ message: "User not found" });
+      return res.status(400).json({ message: "Jeton invalide ou utilisateur introuvable" });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
     user.password = hashedPassword;
-    user.passwordLastChanged = Date.now(); // Mettre à jour la date de changement de mot de passe
+    user.passwordLastChanged = Date.now();
     await user.save();
 
-    res.status(200).json({ message: "Password reset successfully" });
+    res.status(200).json({ message: "Mot de passe réinitialisé avec succès" });
   } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+// Demande de réinitialisation de mot de passe
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(400).json({ message: "User non trouvé" });
+    }
+
+    if (passwordResetCache.get(email)) {
+      return res.status(429).json({ message: "Demande de réinitialisation du mot de passe déjà effectuée. Veuillez attendre 15 minutes avant de réessayer." });
+    }
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const resetUrl = `${process.env.BASE_URL}/reset-password/${token}`;
+
+    await transporter.sendMail({
+      to: email,
+      subject: 'Demande de réinitialisation de mot de passe',
+      html: `Cliquez <a href="${resetUrl}">ici</a> pour réinitialiser votre mot de passe.`
+    });
+
+    // Stocker la demande de réinitialisation dans le cache
+    passwordResetCache.set(email, true);
+
+    res.status(200).json({ message: "Password reset email sent" });
+  } catch (err) {
+    console.error('Server error:', err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 // Planification de la vérification du renouvellement de mot de passe
 cron.schedule('0 0 * * *', async () => {
