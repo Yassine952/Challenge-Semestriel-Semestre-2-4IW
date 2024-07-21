@@ -1,7 +1,7 @@
 // server/src/config/database.js
 import { Sequelize } from 'sequelize';
 
-const sequelize = new Sequelize('mydatabase', 'admin', 'password', {
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
   host: 'postgres',
   dialect: 'postgres',
 });

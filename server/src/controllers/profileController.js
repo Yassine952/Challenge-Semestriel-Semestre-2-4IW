@@ -2,26 +2,28 @@ import User from '../models/User.js';
 
 export const getUserProfile = async (req, res) => {
   try {
-    const user = req.user;
+    const userId = req.user.id;
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ error: 'Failed to fetch user profile' });
   }
 };
 
 export const updateUserProfile = async (req, res) => {
   try {
-    const { firstName, lastName, shippingAddress } = req.body;
-    const user = req.user;
+    const userId = req.user.id;
+    const updatedData = req.body;
+    const user = await User.findByPk(userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ error: 'User not found' });
     }
-    user.firstName = firstName || user.firstName;
-    user.lastName = lastName || user.lastName;
-    user.shippingAddress = shippingAddress || user.shippingAddress;
-    await user.save();
+    await user.update(updatedData);
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ error: 'Failed to update user profile' });
   }
 };

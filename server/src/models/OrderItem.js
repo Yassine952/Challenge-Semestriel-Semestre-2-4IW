@@ -2,36 +2,39 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 import Order from './Order.js';
-import Product from './Product.js';
 
 const OrderItem = sequelize.define('OrderItem', {
   orderId: {
     type: DataTypes.INTEGER,
+    allowNull: false,
     references: {
       model: Order,
-      key: 'id',
-    },
-    allowNull: false,
+      key: 'id'
+    }
   },
   productId: {
     type: DataTypes.INTEGER,
-    references: {
-      model: Product,
-      key: 'id',
-    },
-    allowNull: false,
+    allowNull: false
+  },
+  productName: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  productPrice: {
+    type: DataTypes.FLOAT,
+    allowNull: false
   },
   quantity: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: false
   },
   price: {
     type: DataTypes.FLOAT,
-    allowNull: false,
-  },
+    allowNull: false
+  }
 });
 
-OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
-OrderItem.belongsTo(Product, { foreignKey: 'productId' });
+Order.hasMany(OrderItem, { foreignKey: 'orderId', onDelete: 'CASCADE' });
+OrderItem.belongsTo(Order, { foreignKey: 'orderId', onDelete: 'CASCADE' });
 
 export default OrderItem;

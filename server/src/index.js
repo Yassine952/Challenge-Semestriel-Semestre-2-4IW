@@ -6,6 +6,7 @@ import productRouter from './routes/product.js';
 import cartRouter from './routes/cart.js';
 import stripeRouter from './routes/stripe.js';
 import profileRouter from './routes/profile.js';
+import orderRouter from './routes/order.js';
 import sequelize from './config/database.js';
 import dotenv from 'dotenv';
 import cron from 'node-cron';
@@ -40,7 +41,8 @@ server.use('/api/auth', authRouter);
 server.use('/api/products', productRouter);
 server.use('/api/cart', cartRouter);
 server.use('/api/stripe', stripeRouter);
-server.use('/api/profile', profileRouter); // Ajout de la route profile
+server.use('/api/users/profile', profileRouter); // Utilisation du chemin correct pour les routes profile
+server.use('/api/users/orders', orderRouter);  // Utilisation du chemin correct pour les routes order
 
 // Middleware de gestion des erreurs globales
 server.use((err, req, res, next) => {
