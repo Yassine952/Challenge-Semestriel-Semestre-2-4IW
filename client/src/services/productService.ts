@@ -28,6 +28,11 @@ export const fetchProductById = async (id: number): Promise<Product> => {
   return response.data;
 };
 
+export const fetchCategories = async (): Promise<string[]> => {
+  const response = await axios.get(`${API_URL}/categories`);
+  return response.data;
+};
+
 export const createProduct = async (product: Product): Promise<Product> => {
   const response = await apiClient.post('/', product);
   return response.data;
@@ -42,9 +47,7 @@ export const deleteProduct = async (id: number): Promise<void> => {
   await apiClient.delete(`/${id}`);
 };
 
-export const searchProducts = async (queryParams: Record<string, any>): Promise<Product[]> => {
-  const queryString = new URLSearchParams(queryParams).toString();
-  const response = await apiClient.get(`/search?${queryString}`);
-  console.log('Search response:', response.data);  // Ajoutez cette ligne pour déboguer
+export const searchProducts = async (query: any): Promise<Product[]> => {
+  const response = await axios.get(`${API_URL}/search`, { params: query });
   return response.data;
 };

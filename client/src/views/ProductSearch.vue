@@ -1,10 +1,7 @@
 <template>
   <div>
-    <input type="text" v-model="searchTerm" placeholder="Search products..." />
-    <button @click="searchProducts">Search</button>
-
     <h1>Recherche de produits</h1>
-    <form @submit.prevent="searchProducts">
+    <form @submit.prevent="performSearch">
       <div>
         <label for="name">Nom:</label>
         <input type="text" v-model="searchCriteria.name" />
@@ -15,7 +12,12 @@
       </div>
       <div>
         <label for="category">Catégorie:</label>
-        <input type="text" v-model="searchCriteria.category" />
+        <select v-model="searchCriteria.category">
+          <option value="">Toutes les catégories</option>
+          <option v-for="category in categories" :key="category" :value="category">
+            {{ category }}
+          </option>
+        </select>
       </div>
       <div>
         <label for="priceMin">Prix minimum:</label>
@@ -44,39 +46,83 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
-import { searchProducts } from '../services/productService';
+import { defineComponent, ref, onMounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { searchProducts, fetchCategories } from '../services/productService';
 import { Product } from '../types/Product';
 
 export default defineComponent({
   name: 'ProductSearch',
   setup() {
-    const searchTerm = ref('');
-    const searchCriteria = ref({
-      name: '',
-      description: '',
-      category: '',
-      priceMin: 0,
-      priceMax: 0,
-      inStock: false,
-    });
+    const route = useRoute();
+    const router = useRouter();
     const products = ref<Product[]>([]);
+    const categories = ref<string[]>([]);
+    const searchCriteria = ref({
+      name: route.query.q || '',
+      description: route.query.description || '',
+      category: route.query.category || '',
+      priceMin: route.query.priceMin ? Number(route.query.priceMin) : 0,
+      priceMax: route.query.priceMax ? Number(route.query.priceMax) : 0,
+      inStock: route.query.inStock === 'true',
+    });
+
+    const loadCategories = async () => {
+      try {
+        categories.value = await fetchCategories();
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
 
     const performSearch = async () => {
+      const query: any = { ...searchCriteria.value };
+
+      // Convert the boolean to a string for the query parameters
+      query.inStock = searchCriteria.value.inStock ? 'true' : 'false';
+
+      // Remove unnecessary parameters
+      if (!query.name) delete query.name;
+      if (!query.description) delete query.description;
+      if (!query.category) delete query.category;
+      if (!query.priceMin) delete query.priceMin;
+      if (!query.priceMax) delete query.priceMax;
+      if (query.inStock === 'false') delete query.inStock;
+
+      console.log('Performing search with criteria:', query);
+
+      router.push({ name: 'ProductSearch', query });
+
       try {
-        const response = await searchProducts(searchCriteria.value);
-        console.log('Search response:', response);
+        const response = await searchProducts(query);
         products.value = response;
       } catch (error) {
         console.error('Error searching products:', error);
       }
     };
 
+    watch(route, () => {
+      searchCriteria.value = {
+        name: route.query.name || '',
+        description: route.query.description || '',
+        category: route.query.category || '',
+        priceMin: route.query.priceMin ? Number(route.query.priceMin) : 0,
+        priceMax: route.query.priceMax ? Number(route.query.priceMax) : 0,
+        inStock: route.query.inStock === 'true',
+      };
+      performSearch();
+    }, { immediate: true });
+
+    onMounted(() => {
+      loadCategories();
+      performSearch();
+    });
+
     return {
-      searchTerm,
       searchCriteria,
       products,
-      searchProducts: performSearch,
+      categories,
+      performSearch,
     };
   },
 });

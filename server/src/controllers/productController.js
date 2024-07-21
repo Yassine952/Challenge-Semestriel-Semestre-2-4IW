@@ -1,5 +1,5 @@
 import Product from '../models/Product.js';
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import CartItem from '../models/CartItem.js';
 import Cart from '../models/Cart.js';
 
@@ -80,10 +80,16 @@ export const deleteProduct = async (req, res) => {
 // Recherche de produits avec filtres
 export const searchProducts = async (req, res) => {
   try {
-    const { name, description, category, priceMin, priceMax, inStock } = req.query;
+    const { q, name, description, category, priceMin, priceMax, inStock } = req.query;
 
-    const whereClause = {};
+    const whereClause = { onSale: true };
 
+    if (q) {
+      whereClause[Op.or] = [
+        { name: { [Op.like]: `%${q}%` } },
+        { description: { [Op.like]: `%${q}%` } }
+      ];
+    }
     if (name) {
       whereClause.name = { [Op.like]: `%${name}%` };
     }
@@ -103,10 +109,27 @@ export const searchProducts = async (req, res) => {
       whereClause.stock = inStock === 'true' ? { [Op.gt]: 0 } : { [Op.lte]: 0 };
     }
 
+    console.log('Search whereClause:', whereClause);
+
     const products = await Product.findAll({ where: whereClause });
     res.status(200).json(products);
   } catch (error) {
     console.error('Error searching products:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
+
+// Obtenez toutes les catégories de produits en vente
+export const getCategories = async (req, res) => {
+  try {
+    const categories = await Product.findAll({
+      attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('category')), 'category']],
+      where: { onSale: true }
+    });
+    const categoryList = categories.map(category => category.category);
+    res.status(200).json(categoryList);
+  } catch (error) {
+    console.error('Error fetching categories:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };

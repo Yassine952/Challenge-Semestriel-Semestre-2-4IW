@@ -3,6 +3,7 @@ import {
   searchProducts,
   createProduct,
   getProducts,
+  getCategories,
   getProductById,
   updateProduct,
   deleteProduct
@@ -18,6 +19,7 @@ router.post('/', createProduct);
 // Get all products
 router.get('/', getProducts);
 
+router.get('/categories', getCategories);
 // Get a product by ID
 router.get('/:id', getProductById);
 

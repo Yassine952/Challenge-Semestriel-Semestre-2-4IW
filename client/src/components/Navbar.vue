@@ -42,7 +42,7 @@ export default defineComponent({
 
     const performSearch = () => {
       if (searchQuery.value.trim()) {
-        router.push({ name: 'ProductSearch', query: { name: searchQuery.value.trim() } });
+        router.push({ name: 'ProductSearch', query: { description: searchQuery.value.trim() } });
       }
     };
 
