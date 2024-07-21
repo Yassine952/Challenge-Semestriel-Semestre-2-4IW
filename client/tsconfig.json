@@ -21,7 +21,7 @@
       },
       "lib": ["esnext", "dom"]
     },
-    "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
+    "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "../server/src/services/pdfService.ts", "../server/src/services/emailService.ts"],
     "exclude": ["node_modules"]
   }
   
