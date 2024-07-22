@@ -7,7 +7,6 @@ import ResetPassword from '../views/ResetPassword.vue';
 import ProductList from '../views/ProductList.vue';
 import AddProduct from '../views/AddProduct.vue';
 import EditProduct from '../views/EditProduct.vue';
-import UserList from '../views/UserList.vue';
 import AdminDashboard from '../views/AdminDashboard.vue'; // Importer le composant AdminDashboard
 import ProductSearch from '../views/ProductSearch.vue'; // Importez le composant de recherche
 import Cart from '../views/Cart.vue';
@@ -22,7 +21,6 @@ const routes = [
   { path: '/products', name: 'ProductList', component: ProductList },
   { path: '/add-product', name: 'AddProduct', component: AddProduct },
   { path: '/edit-product/:id', name: 'EditProduct', component: EditProduct },
-  { path: '/users', name: 'UserList', component: UserList },
   { path: '/search', name: 'ProductSearch', component: ProductSearch }, // Ajoutez la route de recherche
   { path: '/cart', name: 'Cart', component: Cart },
   { path: '/profile', name: 'Profile', component: Profile }, // Ajouter la route Profile

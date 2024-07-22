@@ -24,7 +24,10 @@
           <td>{{ product.onSale ? 'Oui' : 'Non' }}</td>
           <td>
             <router-link :to="`/edit-product/${product.id}`">Modifier</router-link>
-            <button @click="deleteProduct(product.id)">Supprimer</button>
+            <confirm-button
+              :delete-url="`/api/products/${product.id}`"
+              :onSuccess="loadProducts"
+            />
             <button @click="addToCart(product.id)" :disabled="product.stock === 0">
               {{ product.stock === 0 ? 'Stock épuisé' : 'Ajouter au panier' }}
             </button>
@@ -37,22 +40,21 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, ref } from 'vue';
-import { fetchProducts, deleteProduct } from '../services/productService';
+import { fetchProducts } from '../services/productService';
 import { Product } from '../types/Product';
 import { addToCart } from '../services/cartService';
+import ConfirmButton from '../components/ConfirmButton.vue';
 
 export default defineComponent({
   name: 'ProductList',
+  components: {
+    ConfirmButton,
+  },
   setup() {
     const products = ref<Product[]>([]);
 
     const loadProducts = async () => {
       products.value = await fetchProducts();
-    };
-
-    const removeProduct = async (id: number) => {
-      await deleteProduct(id);
-      loadProducts();
     };
 
     const addToCartHandler = async (productId: number) => {
@@ -64,7 +66,7 @@ export default defineComponent({
 
     return {
       products,
-      deleteProduct: removeProduct,
+      loadProducts,
       addToCart: addToCartHandler,
     };
   },

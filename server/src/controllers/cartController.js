@@ -116,7 +116,7 @@ export const addToCart = async (req, res) => {
 
 // Supprimer un produit du panier
 export const removeFromCart = async (req, res) => {
-  const { productId } = req.body;
+  const { productId } = req.params;
   const userId = req.user.id;
 
   if (!userId) {

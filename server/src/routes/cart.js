@@ -9,8 +9,8 @@ router.use(authenticateToken);
 
 router.get('/', getCart);
 router.post('/add', addToCart);
-router.post('/remove', removeFromCart);
-router.post('/clear', clearCart);
+router.delete('/remove/:productId', removeFromCart); // Utilisation de DELETE avec un paramètre URL
+router.delete('/clear', clearCart); // Utilisation de DELETE
 router.post('/clear-after-payment', clearCartAfterPayment);
 
 export default router;

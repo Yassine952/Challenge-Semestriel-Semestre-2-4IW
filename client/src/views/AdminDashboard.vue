@@ -45,7 +45,10 @@
       <li v-for="user in users" :key="user.id">
         {{ user.firstName }} {{ user.lastName }} - {{ user.email }}
         <button @click="editUser(user)">Edit</button>
-        <button @click="deleteUser(user.id)">Delete</button>
+        <confirm-button
+          :delete-url="`/api/users/${user.id}`"
+          :on-success="loadUsers"
+        />
       </li>
     </ul>
   </div>
@@ -53,10 +56,12 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue';
-import { fetchUsers, createUser as createNewUser, updateUser as updateExistingUser, deleteUser as deleteExistingUser } from '../services/userService';
+import { fetchUsers, createUser as createNewUser, updateUser as updateExistingUser } from '../services/userService';
+import ConfirmButton from '../components/ConfirmButton.vue';
 
 export default defineComponent({
   name: 'AdminDashboard',
+  components: { ConfirmButton },
   setup() {
     const users = ref([]);
     const newUser = ref({
@@ -106,16 +111,6 @@ export default defineComponent({
       }
     };
 
-    const deleteUser = async (id) => {
-      try {
-        await deleteExistingUser(id);
-        loadUsers();
-        message.value = 'User deleted successfully';
-      } catch (err) {
-        error.value = 'Error deleting user';
-      }
-    };
-
     onMounted(loadUsers);
 
     return {
@@ -128,7 +123,7 @@ export default defineComponent({
       addUser,
       editUser,
       updateUser,
-      deleteUser,
+      loadUsers,
     };
   },
 });

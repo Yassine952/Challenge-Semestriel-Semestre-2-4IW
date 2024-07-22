@@ -5,11 +5,19 @@
       <ul>
         <li v-for="item in cart.CartItems" :key="item.id">
           {{ item.Product.name }} - {{ item.quantity }} x {{ item.price / item.quantity }} = {{ item.price }}
-          <button @click="removeFromCart(item.Product.id)">Retirer</button>
+          <confirm-button
+            :delete-url="`/api/cart/remove/${item.Product.id}`"
+            :on-success="loadCart"
+            button-text="Retirer"
+          />
         </li>
       </ul>
       <p>Total: {{ cart.totalPrice }}</p>
-      <button @click="clearCart">Vider le panier</button>
+      <confirm-button
+        :delete-url="'/api/cart/clear'"
+        :on-success="loadCart"
+        button-text="Vider le panier"
+      />
       <button @click="handleCheckout">Payer</button>
     </div>
     <div v-else>
@@ -20,30 +28,22 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue';
-import { getCart, removeFromCart, clearCart } from '../services/cartService';
-import { createCheckoutSession, clearCartAfterPayment } from '../services/stripeService';
+import { getCart } from '../services/cartService';
+import { createCheckoutSession, clearCartAfterPayment  } from '../services/stripeService';
 import { loadStripe } from '@stripe/stripe-js';
+import ConfirmButton from '../components/ConfirmButton.vue';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 export default defineComponent({
   name: 'Cart',
+  components: { ConfirmButton },
   setup() {
     const cart = ref<any | null>(null);
     const errorMessage = ref<string | null>(null);
 
     const loadCart = async () => {
       cart.value = await getCart();
-    };
-
-    const removeItem = async (productId: number) => {
-      await removeFromCart(productId);
-      loadCart();
-    };
-
-    const clearCartItems = async () => {
-      await clearCart();
-      loadCart();
     };
 
     const handleCheckout = async () => {
@@ -70,10 +70,13 @@ export default defineComponent({
     return {
       cart,
       errorMessage,
-      removeFromCart: removeItem,
-      clearCart: clearCartItems,
       handleCheckout,
+      loadCart,
     };
   },
 });
 </script>
+
+<style scoped>
+/* Ajoutez vos styles ici */
+</style>
