@@ -1,3 +1,4 @@
+// middleware/auth.js
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
@@ -19,4 +20,18 @@ export const authenticateToken = async (req, res, next) => {
   } catch (err) {
     return res.status(403).json({ message: 'Invalid token' });
   }
+};
+
+export const authorize = (roles = []) => {
+  if (typeof roles === 'string') {
+    roles = [roles];
+  }
+
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    next();
+  };
 };

@@ -1,3 +1,4 @@
+// controllers/authController.js
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -32,7 +33,7 @@ export const register = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { firstName, lastName, email, password, shippingAddress } = req.body;
+  const { firstName, lastName, email, password, shippingAddress, role = 'ROLE_USER' } = req.body; // Default role is ROLE_USER
   try {
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
@@ -40,7 +41,7 @@ export const register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    const user = await User.create({ firstName, lastName, email, password: hashedPassword, shippingAddress });
+    const user = await User.create({ firstName, lastName, email, password: hashedPassword, shippingAddress, role });
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     const url = `${process.env.BASE_URL}/api/auth/confirm/${token}`;
@@ -85,7 +86,6 @@ export const login = async (req, res) => {
   const currentTime = Date.now();
 
   if (loginAttempts[email] && loginAttempts[email].count >= 3 && currentTime - loginAttempts[email].lastAttempt < 60000) {
-    // Envoyer un email pour notifier l'utilisateur de trop de tentatives infructueuses
     await transporter.sendMail({
       to: email,
       subject: 'Account Locked Due to Too Many Login Attempts',
@@ -113,72 +113,12 @@ export const login = async (req, res) => {
     }
 
     loginAttempts[email] = { count: 0, lastAttempt: null };
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
     res.status(200).json({ token });
   } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({ message: "Server error" });
-  }
-};
-
-// Récupération de tous les utilisateurs
-export const getUsers = async (req, res) => {
-  try {
-    const users = await User.findAll();
-    res.status(200).json(users);
-  } catch (error) {
-    console.error('Error fetching users:', error); // Ajout de log
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// Récupération d'un utilisateur par ID
-export const getUserById = async (req, res) => {
-  try {
-    const user = await User.findByPk(req.params.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.status(200).json(user);
-  } catch (error) {
-    console.error('Error fetching user:', error); // Ajout de log
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// Création d'un nouvel utilisateur
-export const createUser = async (req, res) => {
-  try {
-    const newUser = await User.create(req.body);
-    res.status(201).json(newUser);
-  } catch (error) {
-    console.error('Error creating user:', error); // Ajout de log
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// Mise à jour d'un utilisateur existant
-export const updateUser = async (req, res) => {
-  try {
-    const updatedUser = await User.findByPk(req.params.id);
-    if (!updatedUser) return res.status(404).json({ message: 'User not found' });
-    await updatedUser.update(req.body);
-    res.status(200).json(updatedUser);
-  } catch (error) {
-    console.error('Error updating user:', error); // Ajout de log
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// Suppression d'un utilisateur
-export const deleteUser = async (req, res) => {
-  try {
-    const deletedUser = await User.findByPk(req.params.id);
-    if (!deletedUser) return res.status(404).json({ message: 'User not found' });
-    await deletedUser.destroy();
-    res.status(200).json({ message: 'User deleted' });
-  } catch (error) {
-    console.error('Error deleting user:', error); // Ajout de log
-    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -211,7 +151,6 @@ export const resetPasswordWithToken = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 // Demande de réinitialisation de mot de passe
 export const forgotPassword = async (req, res) => {
@@ -247,7 +186,6 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-
 // Planification de la vérification du renouvellement de mot de passe
 cron.schedule('0 0 * * *', async () => {
   try {
@@ -260,7 +198,6 @@ cron.schedule('0 0 * * *', async () => {
         if (passwordAge > 60 * 24 * 60 * 60 * 1000) { // 60 jours en millisecondes
           user.passwordNeedsReset = true;
           await user.save();
-          // Envoyer un email pour notifier l'utilisateur de changer son mot de passe
           await transporter.sendMail({
             to: user.email,
             subject: 'Password Reset Required',
