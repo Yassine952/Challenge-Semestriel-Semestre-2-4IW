@@ -10,11 +10,11 @@ import {
 } from '../controllers/productController.js'; // Assurez-vous que le chemin est correct
 import { authenticateToken, authorize } from '../middleware/auth.js';
 const router = express.Router();
-router.use(authenticateToken);
+
 router.get('/search', searchProducts); // Ajout de la route de recherche
 
 // Create a new product
-router.post('/',authorize(['ROLE_ADMIN', 'ROLE_STORE_KEEPER']), createProduct);
+router.post('/',authenticateToken,authorize(['ROLE_ADMIN', 'ROLE_STORE_KEEPER']), createProduct);
 
 // Get all products
 router.get('/', getProducts);
@@ -24,9 +24,9 @@ router.get('/categories', getCategories);
 router.get('/:id', getProductById);
 
 // Update a product by ID
-router.put('/:id',authorize(['ROLE_ADMIN', 'ROLE_STORE_KEEPER']), updateProduct);
+router.put('/:id',authenticateToken,authorize(['ROLE_ADMIN', 'ROLE_STORE_KEEPER']), updateProduct);
 
 // Delete a product by ID
-router.delete('/:id', authorize(['ROLE_ADMIN', 'ROLE_STORE_KEEPER']), deleteProduct);
+router.delete('/:id',authenticateToken, authorize(['ROLE_ADMIN', 'ROLE_STORE_KEEPER']),deleteProduct);
 
 export default router;

@@ -2,7 +2,7 @@
   <div class="admin-dashboard">
     <h1>Admin Dashboard</h1>
     <button @click="showAddUserForm = true">Add User</button>
-
+    <router-link to="/products">Gérer les produits</router-link>
     <div v-if="showAddUserForm">
       <h2>Add User</h2>
       <form @submit.prevent="addUser">
@@ -135,5 +135,16 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Add your styles here */
+.product-link {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #007bff;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 4px;
+}
+.product-link:hover {
+  background-color: #0056b3;
+}
 </style>

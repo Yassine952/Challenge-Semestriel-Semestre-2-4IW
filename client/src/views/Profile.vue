@@ -30,6 +30,8 @@
       </li>
     </ul>
     <p v-else>Aucune commande trouvée.</p>
+
+
   </div>
 </template>
 
@@ -39,6 +41,7 @@ import axios from 'axios';
 import { fetchUserProfile, fetchUserOrders, downloadInvoice } from '../services/userService';
 import { User } from '../types/User';
 import { Order } from '../types/Order';
+
 
 export default defineComponent({
   name: 'Profile',
@@ -52,6 +55,7 @@ export default defineComponent({
       shippingAddress: ''
     });
     const orders = ref<Order[]>([]);
+
     const error = ref<string>('');
 
     const fetchProfile = async () => {
@@ -81,6 +85,8 @@ export default defineComponent({
       }
     };
 
+    
+
     const updateProfile = async () => {
       try {
         await axios.put(`${import.meta.env.VITE_API_URL}/profile`, user, {
@@ -98,6 +104,10 @@ export default defineComponent({
         }
       }
     };
+
+    
+
+   
 
     onMounted(() => {
       fetchProfile();

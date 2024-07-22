@@ -7,7 +7,7 @@
       <li v-if="isLoggedIn"><router-link to="/products">Products</router-link></li>
       <li v-if="isLoggedIn"><router-link to="/add-product">Add Product</router-link></li>
       <li v-if="isLoggedIn"><router-link to="/users">Users</router-link></li>
-      <li v-if="isLoggedIn"><router-link to="/admin">Admin Panel</router-link></li>
+      <li v-if="isLoggedIn"><router-link to="/admin-dashboard">Admin Panel</router-link></li>
       <li v-if="isLoggedIn"><router-link to="/cart">Cart</router-link></li>
       <li v-if="isLoggedIn"><router-link to="/profile">Profile</router-link></li>
       <li v-if="isLoggedIn"><button @click="logout">Logout</button></li>
