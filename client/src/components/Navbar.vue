@@ -4,14 +4,14 @@
       <li><router-link to="/">Home</router-link></li>
       <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
       <li v-if="!isLoggedIn"><router-link to="/register">Register</router-link></li>
-      <li v-if="isLoggedIn"><router-link to="/products">Products</router-link></li>
-      <li v-if="isLoggedIn"><router-link to="/add-product">Add Product</router-link></li>
-      <li v-if="isLoggedIn"><router-link to="/admin-dashboard">Admin Panel</router-link></li>
+      <li v-if="isLoggedIn && hasRole('ROLE_STORE_KEEPER') || hasRole('ROLE_ADMIN')"><router-link to="/products">Products</router-link></li>
+      <li v-if="isLoggedIn && hasRole('ROLE_STORE_KEEPER') || hasRole('ROLE_ADMIN')"><router-link to="/add-product">Add Product</router-link></li>
+      <li v-if="isLoggedIn && hasRole('ROLE_ADMIN')"><router-link to="/admin-dashboard">Admin Panel</router-link></li>
       <li v-if="isLoggedIn"><router-link to="/cart">Cart</router-link></li>
       <li v-if="isLoggedIn"><router-link to="/profile">Profile</router-link></li>
       <li v-if="isLoggedIn"><button @click="logout">Logout</button></li>
     </ul>
-    <div v-if="isLoggedIn" class="search-container">
+    <div class="search-container">
       <input type="text" v-model="searchQuery" placeholder="Search products..." @keypress.enter="performSearch" />
       <button @click="performSearch">Search</button>
     </div>
@@ -21,22 +21,40 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { jwtDecode } from 'jwt-decode';
+
+interface DecodedToken {
+  role: string;
+}
 
 export default defineComponent({
   name: 'Navbar',
   setup() {
     const router = useRouter();
     const isLoggedIn = ref<boolean>(!!localStorage.getItem('token'));
+    const roles = ref<string[]>([]);
     const searchQuery = ref<string>('');
 
     const logout = () => {
       localStorage.removeItem('token');
       isLoggedIn.value = false;
+      roles.value = [];
       router.push('/login');
     };
 
     const checkLoginStatus = () => {
-      isLoggedIn.value = !!localStorage.getItem('token');
+      const token = localStorage.getItem('token');
+      isLoggedIn.value = !!token;
+      if (token) {
+        const decoded: DecodedToken = jwtDecode(token);
+        roles.value = [decoded.role];
+      } else {
+        roles.value = [];
+      }
+    };
+
+    const hasRole = (role: string) => {
+      return roles.value.includes(role);
     };
 
     const performSearch = () => {
@@ -50,7 +68,7 @@ export default defineComponent({
       window.addEventListener('loginStatusChanged', checkLoginStatus);
     });
 
-    return { isLoggedIn, logout, searchQuery, performSearch };
+    return { isLoggedIn, logout, searchQuery, performSearch, hasRole };
   },
 });
 </script>

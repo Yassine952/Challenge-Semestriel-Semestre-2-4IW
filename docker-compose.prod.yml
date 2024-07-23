@@ -24,6 +24,7 @@ services:
       - ./server:/home/node
     depends_on:
       - postgres
+      - mongo
     env_file:
       - ./server/.env
 
@@ -36,6 +37,16 @@ services:
       - '5432:5432'
     env_file:
       - ./postgres/.env
+
+  mongo:
+    image: mongo:latest
+    restart: always
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - '27017:27017'
+    env_file:
+      - ./mongo/.env
 
   adminer:
     image: adminer
@@ -52,10 +63,11 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro  # Ajout du montage des certificats
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - client
       - server
 
 volumes:
   postgres-data:
+  mongo-data:

@@ -22,7 +22,11 @@
         <label for="shippingAddress">Shipping Address:</label>
         <input type="text" v-model="shippingAddress" required />
       </div>
-      <button type="submit">Register</button>
+      <div>
+        <input type="checkbox" v-model="acceptTerms" id="acceptTerms" required />
+        <label for="acceptTerms">I accept the <router-link to="/privacy-policy">privacy policy</router-link> and <router-link to="/mentions-legales">terms and conditions</router-link>.</label>
+      </div>
+      <button type="submit" :disabled="!acceptTerms">Register</button>
     </form>
     <p v-if="error" class="error">{{ error }}</p>
   </div>
@@ -40,6 +44,7 @@ export default defineComponent({
     const email = ref('');
     const password = ref('');
     const shippingAddress = ref('');
+    const acceptTerms = ref(false);
     const error = ref('');
     const router = useRouter();
 
@@ -48,6 +53,11 @@ export default defineComponent({
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
       if (!passwordRegex.test(password.value)) {
         error.value = 'Password must be at least 12 characters long and include a mix of letters, numbers, and symbols.';
+        return;
+      }
+
+      if (!acceptTerms.value) {
+        error.value = 'You must accept the privacy policy and terms and conditions.';
         return;
       }
 
@@ -85,6 +95,7 @@ export default defineComponent({
       email,
       password,
       shippingAddress,
+      acceptTerms,
       error,
       register,
     };

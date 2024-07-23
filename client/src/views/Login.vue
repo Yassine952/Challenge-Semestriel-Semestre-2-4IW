@@ -22,6 +22,7 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { jwtDecode } from 'jwt-decode';
 
 export default defineComponent({
   name: 'Login',
@@ -48,6 +49,8 @@ export default defineComponent({
 
         if (response.ok) {
           localStorage.setItem('token', data.token);
+          const decodedToken = jwtDecode<{ role: string }>(data.token);
+          localStorage.setItem('role', decodedToken.role);
           // Dispatch a custom event to notify about the login status change
           window.dispatchEvent(new CustomEvent('loginStatusChanged'));
           router.push('/');

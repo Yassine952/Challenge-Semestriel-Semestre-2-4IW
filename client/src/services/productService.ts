@@ -28,6 +28,11 @@ export const fetchProductById = async (id: number): Promise<Product> => {
   return response.data;
 };
 
+export const fetchProductsOnSale = async (): Promise<Product[]> => {
+  const response = await apiClient.get('/');
+  return response.data;
+};
+
 export const fetchCategories = async (): Promise<string[]> => {
   const response = await axios.get(`${API_URL}/categories`);
   return response.data;

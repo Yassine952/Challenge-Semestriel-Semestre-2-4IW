@@ -3,6 +3,8 @@ import { Op, Sequelize } from 'sequelize';
 import CartItem from '../models/CartItem.js';
 import Cart from '../models/Cart.js';
 
+
+
 // Créez un nouveau produit
 export const createProduct = async (req, res) => {
   try {
@@ -130,6 +132,15 @@ export const getCategories = async (req, res) => {
     res.status(200).json(categoryList);
   } catch (error) {
     console.error('Error fetching categories:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
+
+export const getProductsOnSale = async (req, res) => {
+  try {
+    const products = await Product.findAll({ where: { onSale: true } });
+    res.status(200).json(products);
+  } catch (error) {
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };

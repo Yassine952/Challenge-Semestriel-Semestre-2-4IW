@@ -12,7 +12,7 @@
       </div>
       <div>
         <label for="price">Price:</label>
-        <input type="number" v-model="product.price" required />
+        <input type="number" v-model="product.price" step="0.01" required />
       </div>
       <div>
         <label for="stock">Stock:</label>
