@@ -4,10 +4,8 @@ import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Utiliser express.json() pour les autres routes
 router.post('/create-checkout-session', authenticateToken, createCheckoutSession);
 
-// Utiliser express.raw() pour la route du webhook
 router.post('/webhook', express.raw({ type: 'application/json' }), handleStripeWebhook);
 
 export default router;

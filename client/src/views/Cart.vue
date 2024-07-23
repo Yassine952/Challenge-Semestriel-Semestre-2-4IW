@@ -49,19 +49,19 @@ export default defineComponent({
     const handleCheckout = async () => {
       try {
         const stripe = await stripePromise;
-        await loadCart(); // Ensure cart is updated before checking out
+        await loadCart();
         const session = await createCheckoutSession(cart.value.CartItems);
 
         if (stripe) {
           const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
           if (!error) {
-            await clearCartAfterPayment(); // Clear the cart after a successful payment
-            loadCart(); // Refresh the cart to show it's empty
+            await clearCartAfterPayment();
+            loadCart();
           }
         }
       } catch (error: any) {
         errorMessage.value = error.response?.data?.message || 'Erreur lors de la création de la session de paiement';
-        loadCart(); // Refresh the cart to reflect any expired items
+        loadCart();
       }
     };
 
@@ -78,5 +78,4 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Ajoutez vos styles ici */
 </style>

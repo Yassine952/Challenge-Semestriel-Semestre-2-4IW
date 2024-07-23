@@ -30,10 +30,8 @@ export const cleanExpiredItems = async () => {
   }
 };
 
-// Planifier une tâche cron pour exécuter cleanExpiredItems toutes les minutes
 cron.schedule('* * * * *', cleanExpiredItems);
 
-// Obtenir le panier de l'utilisateur
 export const getCart = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -114,13 +112,12 @@ export const addToCart = async (req, res) => {
   }
 };
 
-// Supprimer un produit du panier
 export const removeFromCart = async (req, res) => {
   const { productId } = req.params;
   const userId = req.user.id;
 
   if (!userId) {
-    return res.status(400).json({ message: 'User ID is missing' });
+    return res.status(400).json({ message: 'User ID manquant' });
   }
 
   try {
@@ -144,17 +141,15 @@ export const removeFromCart = async (req, res) => {
 
     res.status(200).json(cart);
   } catch (error) {
-    console.error('Error removing from cart:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
 
-// Vider le panier
 export const clearCart = async (req, res) => {
   const userId = req.user.id;
 
   if (!userId) {
-    return res.status(400).json({ message: 'User ID is missing' });
+    return res.status(400).json({ message: 'ID utilisateur est manquant' });
   }
 
   try {
@@ -176,12 +171,10 @@ export const clearCart = async (req, res) => {
 
     res.status(200).json(cart);
   } catch (error) {
-    console.error('Error clearing cart:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
 
-// Vérifier les articles expirés dans le panier
 export const checkExpiredCartItems = async (cartId) => {
   const now = new Date();
   const expiredItems = await CartItem.findAll({
@@ -197,7 +190,6 @@ export const checkExpiredCartItems = async (cartId) => {
 };
 
 
-// Fonction pour vider le panier après un paiement réussi
 export const clearCartAfterPayment = async (req, res) => {
   const userId = req.user.id;
   console.log('clearCartAfterPayment called, userId:', userId);
@@ -218,10 +210,6 @@ export const clearCartAfterPayment = async (req, res) => {
     for (const cartItem of cartItems) {
       const product = await Product.findByPk(cartItem.productId);
       console.log(`Updating stock for product ${product.id}`);
-      
-      // Ne pas soustraire le stock ici, car il a déjà été soustrait temporairement
-      // Donc, aucune mise à jour du stock ici
-      
       await cartItem.destroy();
     }
 

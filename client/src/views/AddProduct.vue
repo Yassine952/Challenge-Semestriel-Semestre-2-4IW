@@ -3,7 +3,7 @@
     <h1>Ajouter un produit</h1>
     <form @submit.prevent="handleSubmit">
       <div>
-        <label for="name">Name:</label>
+        <label for="name">Nom</label>
         <input type="text" v-model="name" @input="handleChange('name', $event.target.value)" required />
         <span v-if="nameError">{{ nameError }}</span>
       </div>
@@ -13,7 +13,7 @@
         <span v-if="descriptionError">{{ descriptionError }}</span>
       </div>
       <div>
-        <label for="price">Price:</label>
+        <label for="price">Prix:</label>
         <input type="number" v-model="price" @input="handleChange('price', $event.target.value)" step="0.01" required />
         <span v-if="priceError">{{ priceError }}</span>
       </div>
@@ -23,11 +23,11 @@
         <span v-if="stockError">{{ stockError }}</span>
       </div>
       <div>
-        <label for="category">Category:</label>
+        <label for="category">Categorie:</label>
         <input type="text" v-model="category" @input="handleChange('category', $event.target.value)" required />
         <span v-if="categoryError">{{ categoryError }}</span>
       </div>
-      <button type="submit" :disabled="isSubmitting">Save</button>
+      <button type="submit" :disabled="isSubmitting">Ajouter</button>
       <p v-if="serverError" class="error">{{ serverError }}</p>
     </form>
   </div>

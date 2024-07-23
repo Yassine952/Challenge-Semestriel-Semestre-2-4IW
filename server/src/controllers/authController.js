@@ -1,4 +1,3 @@
-// controllers/authController.js
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -11,7 +10,6 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Configuration du transporteur de courrier électronique
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -20,13 +18,10 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Temporisation après tentatives de connexion infructueuses
 let loginAttempts = {};
 
-// Cache pour les demandes de réinitialisation de mot de passe
 const passwordResetCache = new NodeCache({ stdTTL: 15 * 60, checkperiod: 60 }); // TTL de 15 minutes
 
-// Inscription de l'utilisateur avec confirmation par email
 export const register = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -48,18 +43,16 @@ export const register = async (req, res) => {
 
     await transporter.sendMail({
       to: email,
-      subject: 'Confirm your email',
-      html: `Cliquez<a href="${url}">ici</a> pour confirmer votre inscription.`
+      subject: 'Confirmez votre compte',
+      html: `Cliquez <a href="${url}">ici</a> pour confirmer votre inscription.`
     });
 
-    res.status(201).json({ message: "User registered, please check your email to confirm your account." });
+    res.status(201).json({ message: "veuillez vérifier votre email pour confirmer votre compte." });
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Erreur serveur" });
   }
 };
 
-// Confirmation de l'email de l'utilisateur
 export const confirmEmail = async (req, res) => {
   try {
     const { token } = req.params;
@@ -67,20 +60,18 @@ export const confirmEmail = async (req, res) => {
     const user = await User.findByPk(decoded.userId);
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid token" });
+      return res.status(400).json({ message: "Token invalide" });
     }
 
     user.isConfirmed = true;
     await user.save();
 
-    res.status(200).json({ message: "Email confirmed" });
+    res.status(200).json({ message: "email confirmé" });
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Erreur serveur" });
   }
 };
 
-// Connexion de l'utilisateur avec gestion des tentatives infructueuses
 export const login = async (req, res) => {
   const { email, password } = req.body;
   const currentTime = Date.now();
@@ -88,11 +79,11 @@ export const login = async (req, res) => {
   if (loginAttempts[email] && loginAttempts[email].count >= 3 && currentTime - loginAttempts[email].lastAttempt < 60000) {
     await transporter.sendMail({
       to: email,
-      subject: 'Account Locked Due to Too Many Login Attempts',
-      html: 'Your account has been locked due to too many login attempts. Please try again after some time.'
+      subject: 'Compte verrouillé en raison dun trop grand nombre de tentatives de connexion',
+      html: 'Votre compte a été verrouillé en raison dun trop grand nombre de tentatives de connexion. Veuillez réessayer après un certain temps.'
     });
 
-    return res.status(403).json({ message: "Too many login attempts. Please try again after some time." });
+    return res.status(403).json({ message: "Trop de tentatives de connexion. Veuillez réessayer après un certain temps." });
   }
 
   try {
@@ -105,11 +96,11 @@ export const login = async (req, res) => {
         loginAttempts[email].count += 1;
         loginAttempts[email].lastAttempt = currentTime;
       }
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "email ou mot de passe incorrect" });
     }
 
     if (!user.isConfirmed) {
-      return res.status(403).json({ message: "Please confirm your email to login" });
+      return res.status(403).json({ message: "Veuillez confirmer votre email pour vous connecter" });
     }
 
     loginAttempts[email] = { count: 0, lastAttempt: null };
@@ -117,12 +108,10 @@ export const login = async (req, res) => {
 
     res.status(200).json({ token });
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Erreur serveur" });
   }
 };
 
-// Réinitialisation du mot de passe avec le token
 export const resetPasswordWithToken = async (req, res) => {
   const { token } = req.params;
   const { newPassword } = req.body;
@@ -147,12 +136,10 @@ export const resetPasswordWithToken = async (req, res) => {
 
     res.status(200).json({ message: "Mot de passe réinitialisé avec succès" });
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Erreur serveur" });
   }
 };
 
-// Demande de réinitialisation de mot de passe
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -176,17 +163,14 @@ export const forgotPassword = async (req, res) => {
       html: `Cliquez <a href="${resetUrl}">ici</a> pour réinitialiser votre mot de passe.`
     });
 
-    // Stocker la demande de réinitialisation dans le cache
     passwordResetCache.set(email, true);
 
-    res.status(200).json({ message: "Password reset email sent" });
+    res.status(200).json({ message: "E-mail de réinitialisation du mot de passe envoyé" });
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Erreur serveur" });
   }
 };
 
-// Planification de la vérification du renouvellement de mot de passe
 cron.schedule('0 0 * * *', async () => {
   try {
     const users = await User.findAll();
@@ -195,13 +179,13 @@ cron.schedule('0 0 * * *', async () => {
     users.forEach(async (user) => {
       if (user.passwordLastChanged) {
         const passwordAge = currentTime - new Date(user.passwordLastChanged).getTime();
-        if (passwordAge > 60 * 24 * 60 * 60 * 1000) { // 60 jours en millisecondes
+        if (passwordAge > 60 * 24 * 60 * 60 * 1000) { 
           user.passwordNeedsReset = true;
           await user.save();
           await transporter.sendMail({
             to: user.email,
-            subject: 'Password Reset Required',
-            html: 'Your password needs to be reset. Please change your password.'
+            subject: 'Réinitialisation du mot de passe requise',
+            html: 'Votre mot de passe doit être réinitialisé. Veuillez changer votre mot de passe.'
           });
         }
       }

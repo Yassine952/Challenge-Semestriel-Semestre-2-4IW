@@ -1,4 +1,3 @@
-// client/src/services/orderService.ts
 import axios from 'axios';
 
 export const fetchOrders = async () => {

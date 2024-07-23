@@ -1,4 +1,3 @@
-// server/src/models/OrderItem.js
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 import Order from './Order.js';

@@ -3,16 +3,16 @@
       <button @click="openModal">Supprimer</button>
       <modal v-if="showModal" @close="closeModal">
         <template v-slot:header>
-          <h3>Confirm Deletion</h3>
+          <h3>Confirmation de suppression</h3>
         </template>
         <template v-slot:body>
-          <p>Are you sure you want to delete this item?</p>
+          <p>Voulez-vous vraiment supprimer ??</p>
         </template>
         <template v-slot:footer>
-          <button @click="confirmDeletion" :disabled="isLoading">Yes</button>
-          <button @click="closeModal" :disabled="isLoading">No</button>
+          <button @click="confirmDeletion" :disabled="isLoading">Oui</button>
+          <button @click="closeModal" :disabled="isLoading">Non</button>
         </template>
-        <div v-if="isLoading">Loading...</div>
+        <div v-if="isLoading">Chargement</div>
         <div v-if="errorMessage">{{ errorMessage }}</div>
       </modal>
     </div>
@@ -62,7 +62,7 @@
           props.onSuccess();
           closeModal();
         } catch (error) {
-          errorMessage.value = 'Failed to delete the item.';
+          errorMessage.value = 'Erreur pendant la suppression.';
         } finally {
           isLoading.value = false;
         }
@@ -80,7 +80,4 @@
   });
   </script>
   
-  <style scoped>
-  /* Add your styles here */
-  </style>
   

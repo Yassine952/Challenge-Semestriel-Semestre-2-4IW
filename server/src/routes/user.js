@@ -1,4 +1,3 @@
-// routes/userRoutes.js
 import express from 'express';
 import { check } from 'express-validator';
 import { getUsers, getUserById, createUser, updateUser, deleteUser } from '../controllers/userController.js';
@@ -6,7 +5,7 @@ import { authenticateToken, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.use(authenticateToken); // All routes require authentication
+router.use(authenticateToken);
 
 router.get('/', authorize(['ROLE_ADMIN']), getUsers);
 router.get('/:id', authorize(['ROLE_ADMIN']), getUserById);

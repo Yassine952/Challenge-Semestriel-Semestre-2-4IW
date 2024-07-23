@@ -1,4 +1,3 @@
-// src/composables/useAuth.ts
 import { ref } from 'vue';
 
 const isAuthenticated = ref<boolean>(false);

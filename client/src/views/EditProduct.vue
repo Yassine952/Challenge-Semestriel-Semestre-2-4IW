@@ -107,7 +107,6 @@ export default defineComponent({
       try {
         const response = await fetchProductById(Number(route.params.id));
         product.value = response;
-        // Initialize form values
         handleChange('name', response.name);
         handleChange('description', response.description);
         handleChange('price', response.price);

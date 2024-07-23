@@ -38,7 +38,7 @@
         } else {
           showBanner.value = false;
           if (userCookiesPref === "false") {
-            // Supprimez les cookies non essentiels ici si nécessaire
+            // à faire plus tard
           }
         }
       };
