@@ -4,6 +4,7 @@
     <div class="content">
       <router-view />
     </div>
+    <CookieBanner />
     <Footer />
   </div>
 </template>
