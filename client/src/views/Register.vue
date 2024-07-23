@@ -1,13 +1,13 @@
 <template>
   <div class="register">
-    <h1>Register</h1>
+    <h1>S'inscrire</h1>
     <form @submit.prevent="register">
       <div>
-        <label for="firstName">First Name:</label>
+        <label for="firstName">Prénom:</label>
         <input type="text" v-model="firstName" required />
       </div>
       <div>
-        <label for="lastName">Last Name:</label>
+        <label for="lastName">Nom de famille:</label>
         <input type="text" v-model="lastName" required />
       </div>
       <div>
@@ -15,16 +15,16 @@
         <input type="email" v-model="email" required />
       </div>
       <div>
-        <label for="password">Password:</label>
+        <label for="password">Mot de passe:</label>
         <input type="password" v-model="password" required />
       </div>
       <div>
-        <label for="shippingAddress">Shipping Address:</label>
+        <label for="shippingAddress">Adresse de livraison:</label>
         <input type="text" v-model="shippingAddress" required />
       </div>
       <div>
         <input type="checkbox" v-model="acceptTerms" id="acceptTerms" required />
-        <label for="acceptTerms">I accept the <router-link to="/privacy-policy">privacy policy</router-link> and <router-link to="/mentions-legales">terms and conditions</router-link>.</label>
+        <label for="acceptTerms">J'accepte la <router-link to="/privacy-policy">politique de confidentialité</router-link> et <router-link to="/legal-mentions">les mentions légales</router-link>.</label>
       </div>
       <button type="submit" :disabled="!acceptTerms">Register</button>
     </form>
@@ -77,7 +77,7 @@ export default defineComponent({
         });
         const data = await response.json();
         if (response.ok) {
-          alert('Registration successful! Please check your email to confirm your account.');
+          alert('Inscription reussi ! Vous allez reçevoir un mail pour confirmer votre compte.');
           // Dispatch a custom event to notify about the login status change
           window.dispatchEvent(new CustomEvent('loginStatusChanged'));
           router.push('/login');

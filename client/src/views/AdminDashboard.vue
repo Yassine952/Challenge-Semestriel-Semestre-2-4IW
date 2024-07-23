@@ -1,50 +1,50 @@
 <template>
   <div class="admin-dashboard">
-    <h1>Admin Dashboard</h1>
-    <button @click="showAddUserForm = true">Add User</button>
+    <h1>Tableau de bord </h1>
+    <button @click="showAddUserForm = true">Ajouter un utilisateur</button>
     <router-link to="/products">Gérer les produits</router-link>
     <div v-if="showAddUserForm">
-      <h2>Add User</h2>
+      <h2>Ajouter un utilisateur</h2>
       <form @submit.prevent="addUser">
-        <input v-model="newUser.firstName" placeholder="First Name" required>
-        <input v-model="newUser.lastName" placeholder="Last Name" required>
+        <input v-model="newUser.firstName" placeholder="Prénom" required>
+        <input v-model="newUser.lastName" placeholder="Nom de famille" required>
         <input v-model="newUser.email" placeholder="Email" required>
-        <input v-model="newUser.password" type="password" placeholder="Password" required>
-        <input v-model="newUser.shippingAddress" placeholder="Shipping Address" required>
+        <input v-model="newUser.password" type="password" placeholder="Mot de passe" required>
+        <input v-model="newUser.shippingAddress" placeholder="Adresse de livraison" required>
         <select v-model="newUser.role">
           <option value="ROLE_USER">User</option>
           <option value="ROLE_STORE_KEEPER">Store Keeper</option>
           <option value="ROLE_ADMIN">Admin</option>
         </select>
-        <button type="submit">Add User</button>
+        <button type="submit">Ajouter</button>
       </form>
     </div>
 
     <div v-if="editUserForm">
-      <h2>Edit User</h2>
+      <h2>Modifier un utilisateur</h2>
       <form @submit.prevent="updateUser(editUserForm.id)">
-        <input v-model="editUserForm.firstName" placeholder="First Name" required>
-        <input v-model="editUserForm.lastName" placeholder="Last Name" required>
+        <input v-model="editUserForm.firstName" placeholder="Prénom" required>
+        <input v-model="editUserForm.lastName" placeholder="Nom de famille" required>
         <input v-model="editUserForm.email" placeholder="Email" required>
-        <input v-model="editUserForm.password" type="password" placeholder="Password">
-        <input v-model="editUserForm.shippingAddress" placeholder="Shipping Address" required>
+        <input v-model="editUserForm.password" type="password" placeholder="Mot de passe">
+        <input v-model="editUserForm.shippingAddress" placeholder="Adresse de livraison" required>
         <select v-model="editUserForm.role">
-          <option value="ROLE_USER">User</option>
+          <option value="ROLE_USER">Utilisateur</option>
           <option value="ROLE_STORE_KEEPER">Store Keeper</option>
           <option value="ROLE_ADMIN">Admin</option>
         </select>
-        <button type="submit">Update User</button>
+        <button type="submit">Modifier l'utilisateur</button>
       </form>
     </div>
 
     <div v-if="message" class="message">{{ message }}</div>
     <div v-if="error" class="error">{{ error }}</div>
 
-    <h2>Users List</h2>
+    <h2>Liste des utilisateurs</h2>
     <ul>
       <li v-for="user in users" :key="user.id">
         {{ user.firstName }} {{ user.lastName }} - {{ user.email }}
-        <button @click="editUser(user)">Edit</button>
+        <button @click="editUser(user)">Modifier</button>
         <confirm-button
           :delete-url="`/api/users/${user.id}`"
           :on-success="loadUsers"

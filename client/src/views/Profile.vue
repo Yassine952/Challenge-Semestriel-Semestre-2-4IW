@@ -1,13 +1,13 @@
 <template>
   <div class="profile">
-    <h1>Profile</h1>
+    <h1>Profil</h1>
     <form @submit.prevent="updateProfile">
       <div>
-        <label for="firstName">First Name:</label>
+        <label for="firstName">Prénom:</label>
         <input type="text" v-model="user.firstName" required />
       </div>
       <div>
-        <label for="lastName">Last Name:</label>
+        <label for="lastName">Nom de famille:</label>
         <input type="text" v-model="user.lastName" required />
       </div>
       <div>
@@ -15,10 +15,10 @@
         <input type="email" v-model="user.email" readonly />
       </div>
       <div>
-        <label for="shippingAddress">Shipping Address:</label>
+        <label for="shippingAddress">Adresse de livraison:</label>
         <input type="text" v-model="user.shippingAddress" required />
       </div>
-      <button type="submit">Update Profile</button>
+      <button type="submit">Mettre à jour votre profil</button>
     </form>
     <p v-if="error" class="error">{{ error }}</p>
 
@@ -120,27 +120,5 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.error {
-  color: red;
-}
-form {
-  display: flex;
-  flex-direction: column;
-}
-form div {
-  margin-bottom: 10px;
-}
-label {
-  margin-right: 10px;
-}
-button {
-  padding: 10px 20px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-button:hover {
-  background-color: #45a049;
-}
+
 </style>

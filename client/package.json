@@ -16,12 +16,16 @@
     "jwt-decode": "^4.0.0",
     "vue": "^3.3.11",
     "vue-router": "^4.0.13",
-    "vue-stripe": "^0.1.52"
+    "vue-stripe": "^0.1.52",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
     "@vitejs/plugin-vue": "^4.5.2",
     "@vue/cli-plugin-typescript": "^5.0.8",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.6",
     "typescript": "^5.5.3",
     "vite": "^5.0.8"
   }

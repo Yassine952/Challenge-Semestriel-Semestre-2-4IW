@@ -4,61 +4,95 @@
     <form @submit.prevent="handleSubmit">
       <div>
         <label for="name">Name:</label>
-        <input type="text" v-model="product.name" required />
+        <input type="text" v-model="name" @input="handleChange('name', $event.target.value)" required />
+        <span v-if="nameError">{{ nameError }}</span>
       </div>
       <div>
         <label for="description">Description:</label>
-        <textarea v-model="product.description"></textarea>
+        <textarea v-model="description" @input="handleChange('description', $event.target.value)"></textarea>
+        <span v-if="descriptionError">{{ descriptionError }}</span>
       </div>
       <div>
         <label for="price">Price:</label>
-        <input type="number" v-model="product.price" step="0.01" required />
+        <input type="number" v-model="price" @input="handleChange('price', $event.target.value)" step="0.01" required />
+        <span v-if="priceError">{{ priceError }}</span>
       </div>
       <div>
         <label for="stock">Stock:</label>
-        <input type="number" v-model="product.stock" required />
+        <input type="number" v-model="stock" @input="handleChange('stock', $event.target.value)" required />
+        <span v-if="stockError">{{ stockError }}</span>
       </div>
       <div>
         <label for="category">Category:</label>
-        <input type="text" v-model="product.category" required />
+        <input type="text" v-model="category" @input="handleChange('category', $event.target.value)" required />
+        <span v-if="categoryError">{{ categoryError }}</span>
       </div>
-      <button type="submit">Save</button>
+      <button type="submit" :disabled="isSubmitting">Save</button>
+      <p v-if="serverError" class="error">{{ serverError }}</p>
     </form>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
+import { z } from 'zod';
+import { useForm } from '../composables/useForm';
 import { createProduct } from '../services/productService';
-import { Product } from '../types/Product';
+
+const productSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
+  price: z.number().min(0, 'Price must be a positive number'),
+  stock: z.number().min(0, 'Stock must be a positive number'),
+  category: z.string().min(1, 'Category is required'),
+});
 
 export default defineComponent({
   name: 'AddProduct',
   setup() {
     const router = useRouter();
 
-    const product = ref<Product>({
-      name: '',
-      description: '',
-      price: 0,
-      stock: 0,
-      category: ''
+    const {
+      values,
+      nameError,
+      descriptionError,
+      priceError,
+      stockError,
+      categoryError,
+      isSubmitting,
+      serverError,
+      handleChange,
+      handleSubmit,
+    } = useForm({
+      initialValues: {
+        name: '',
+        description: '',
+        price: 0,
+        stock: 0,
+        category: '',
+      },
+      schema: productSchema,
+      onSubmit: async (product) => {
+        try {
+          await createProduct(product);
+          router.push('/products');
+        } catch (error) {
+          console.error('Error during product creation:', error);
+        }
+      },
     });
 
-    const handleSubmit = async () => {
-      try {
-        console.log('Adding product:', product.value);
-        const response = await createProduct(product.value);
-        console.log('Product added successfully:', response);
-        router.push('/products');
-      } catch (error) {
-        console.error('Error adding product:', error);
-      }
-    };
-
     return {
-      product,
+      ...values,
+      nameError,
+      descriptionError,
+      priceError,
+      stockError,
+      categoryError,
+      isSubmitting,
+      serverError,
+      handleChange,
       handleSubmit,
     };
   },
@@ -66,5 +100,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Ajoutez vos styles ici */
+.error {
+  color: red;
+}
 </style>

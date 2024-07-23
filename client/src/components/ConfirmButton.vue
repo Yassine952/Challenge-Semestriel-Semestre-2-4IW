@@ -1,6 +1,6 @@
 <template>
     <div>
-      <button @click="openModal">Delete</button>
+      <button @click="openModal">Supprimer</button>
       <modal v-if="showModal" @close="closeModal">
         <template v-slot:header>
           <h3>Confirm Deletion</h3>

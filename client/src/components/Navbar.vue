@@ -2,18 +2,18 @@
   <nav>
     <ul>
       <li><router-link to="/">Home</router-link></li>
-      <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
-      <li v-if="!isLoggedIn"><router-link to="/register">Register</router-link></li>
-      <li v-if="isLoggedIn && hasRole('ROLE_STORE_KEEPER') || hasRole('ROLE_ADMIN')"><router-link to="/products">Products</router-link></li>
-      <li v-if="isLoggedIn && hasRole('ROLE_STORE_KEEPER') || hasRole('ROLE_ADMIN')"><router-link to="/add-product">Add Product</router-link></li>
-      <li v-if="isLoggedIn && hasRole('ROLE_ADMIN')"><router-link to="/admin-dashboard">Admin Panel</router-link></li>
-      <li v-if="isLoggedIn"><router-link to="/cart">Cart</router-link></li>
-      <li v-if="isLoggedIn"><router-link to="/profile">Profile</router-link></li>
-      <li v-if="isLoggedIn"><button @click="logout">Logout</button></li>
+      <li v-if="!isLoggedIn"><router-link to="/login">Se connecter</router-link></li>
+      <li v-if="!isLoggedIn"><router-link to="/register">S'inscrire</router-link></li>
+      <li v-if="isLoggedIn && hasRole('ROLE_STORE_KEEPER') || hasRole('ROLE_ADMIN')"><router-link to="/products">Produits</router-link></li>
+      <li v-if="isLoggedIn && hasRole('ROLE_STORE_KEEPER') || hasRole('ROLE_ADMIN')"><router-link to="/add-product">Ajouter un produit</router-link></li>
+      <li v-if="isLoggedIn && hasRole('ROLE_ADMIN')"><router-link to="/admin-dashboard">Tableau de bord</router-link></li>
+      <li v-if="isLoggedIn"><router-link to="/cart">Panier</router-link></li>
+      <li v-if="isLoggedIn"><router-link to="/profile">Profil</router-link></li>
+      <li v-if="isLoggedIn"><button @click="logout">Se déconnecter</button></li>
     </ul>
     <div class="search-container">
-      <input type="text" v-model="searchQuery" placeholder="Search products..." @keypress.enter="performSearch" />
-      <button @click="performSearch">Search</button>
+      <input type="text" v-model="searchQuery" placeholder="Chercher un produit..." @keypress.enter="performSearch" />
+      <button @click="performSearch">Chercher</button>
     </div>
   </nav>
 </template>

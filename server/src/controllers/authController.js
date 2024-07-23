@@ -49,7 +49,7 @@ export const register = async (req, res) => {
     await transporter.sendMail({
       to: email,
       subject: 'Confirm your email',
-      html: `Click <a href="${url}">here</a> to confirm your email.`
+      html: `Cliquez<a href="${url}">ici</a> pour confirmer votre inscription.`
     });
 
     res.status(201).json({ message: "User registered, please check your email to confirm your account." });
