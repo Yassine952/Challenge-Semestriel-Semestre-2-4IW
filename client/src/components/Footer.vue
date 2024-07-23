@@ -4,6 +4,7 @@
         <div class="footer-links">
           <router-link to="/legal-mentions">Mentions Légales</router-link>
           <router-link to="/privacy-policy">Politique de Confidentialité</router-link>
+          <router-link to="/terms-and-conditions">Conditions Générales de Vente</router-link>
         </div>
         <div class="footer-info">
           <p>&copy; 2024 Lemondedesmugs.fr Tous droits réservés.</p>
