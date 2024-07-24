@@ -25,22 +25,3 @@ export default defineComponent({
 });
 </script>
 
-<style>
-#app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.content {
-  flex: 1;
-}
-
-footer {
-  width: 100%;
-  text-align: center;
-  padding: 20px;
-  background-color: #333;
-  color: #fff;
-}
-</style>

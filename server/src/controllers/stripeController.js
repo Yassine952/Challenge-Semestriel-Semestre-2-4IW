@@ -32,11 +32,11 @@ export const createCheckoutSession = async (req, res) => {
 
     const lineItems = cartItems.map(item => ({
       price_data: {
-        currency: 'eur', // Changed to EUR
+        currency: 'eur',
         product_data: {
           name: item.Product.name,
         },
-        unit_amount: item.Product.price * 100, // Price in cents
+        unit_amount: item.Product.price * 100,
       },
       quantity: item.quantity,
     }));
@@ -49,7 +49,7 @@ export const createCheckoutSession = async (req, res) => {
       cancel_url: `${process.env.CLIENT_URL}/cancel`,
       metadata: {
         userId: req.user.id,
-        cartId: cart.id, // Added cart ID to metadata
+        cartId: cart.id,
       },
     });
 
@@ -76,14 +76,13 @@ export const handleStripeWebhook = async (req, res) => {
 
     try {
       const userId = session.metadata.userId;
-      const cartId = session.metadata.cartId; // Retrieving cart ID
+      const cartId = session.metadata.cartId; 
       const user = await User.findByPk(userId);
 
       if (!user) {
         throw new Error('User not found');
       }
 
-      // Retrieve line items for this session
       const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
 
       const order = await Order.create({
@@ -91,7 +90,7 @@ export const handleStripeWebhook = async (req, res) => {
         userName: `${user.firstName} ${user.lastName}`,
         userAddress: user.shippingAddress,
         totalAmount: session.amount_total / 100,
-        status: 'Completed', // Set order status to completed
+        status: 'Completed', 
       });
 
       const orderItems = [];
@@ -119,13 +118,10 @@ export const handleStripeWebhook = async (req, res) => {
 
       console.log(`Order ${order.id} created for user ${user.id}`);
 
-      // Generate the PDF invoice after creating the order
       const pdfPath = await generateInvoicePDF(order, user);
 
-      // Empty the user's cart
       await CartItem.destroy({ where: { cartId: cartId } });
 
-      // Send the invoice email
       await sendInvoiceEmail(user.email, pdfPath);
 
     } catch (error) {

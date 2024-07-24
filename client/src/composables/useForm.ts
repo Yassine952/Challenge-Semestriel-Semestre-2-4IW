@@ -14,7 +14,6 @@ export function useForm<T extends Record<string, any>>({ initialValues, schema, 
   const serverError = ref<string | null>(null);
 
   const handleChange = (field: keyof T, value: any) => {
-    // Convert values to the appropriate types
     if (field === 'price' || field === 'stock') {
       values[field] = Number(value);
     } else {

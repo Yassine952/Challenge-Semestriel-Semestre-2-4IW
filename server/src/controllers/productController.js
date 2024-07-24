@@ -4,8 +4,6 @@ import CartItem from '../models/CartItem.js';
 import Cart from '../models/Cart.js';
 
 
-
-// Créez un nouveau produit
 export const createProduct = async (req, res) => {
   try {
     console.log('Creating product with data:', req.body);
@@ -17,7 +15,6 @@ export const createProduct = async (req, res) => {
   }
 };
 
-// Obtenez tous les produits
 export const getProducts = async (req, res) => {
   try {
     const products = await Product.findAll();
@@ -28,7 +25,6 @@ export const getProducts = async (req, res) => {
   }
 };
 
-// Obtenez un produit par son ID
 export const getProductById = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
@@ -40,7 +36,6 @@ export const getProductById = async (req, res) => {
   }
 };
 
-// Mettez à jour un produit par son ID
 export const updateProduct = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
@@ -53,13 +48,11 @@ export const updateProduct = async (req, res) => {
   }
 };
 
-// Supprimez un produit par son ID
 export const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
 
-    // Avant de supprimer le produit, mettons à jour les paniers
     const cartItems = await CartItem.findAll({ where: { productId: product.id } });
     
     for (const item of cartItems) {
@@ -79,7 +72,6 @@ export const deleteProduct = async (req, res) => {
   }
 };
 
-// Recherche de produits avec filtres
 export const searchProducts = async (req, res) => {
   try {
     const { q, name, description, category, priceMin, priceMax, inStock } = req.query;
@@ -88,15 +80,15 @@ export const searchProducts = async (req, res) => {
 
     if (q) {
       whereClause[Op.or] = [
-        { name: { [Op.like]: `%${q}%` } },
-        { description: { [Op.like]: `%${q}%` } }
+        Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), { [Op.like]: `%${q.toLowerCase()}%` }),
+        Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('description')), { [Op.like]: `%${q.toLowerCase()}%` })
       ];
     }
     if (name) {
-      whereClause.name = { [Op.like]: `%${name}%` };
+      whereClause.name = Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), { [Op.like]: `%${name.toLowerCase()}%` });
     }
     if (description) {
-      whereClause.description = { [Op.like]: `%${description}%` };
+      whereClause.description = Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('description')), { [Op.like]: `%${description.toLowerCase()}%` });
     }
     if (category) {
       whereClause.category = category;
@@ -121,7 +113,6 @@ export const searchProducts = async (req, res) => {
   }
 };
 
-// Obtenez toutes les catégories de produits en vente
 export const getCategories = async (req, res) => {
   try {
     const categories = await Product.findAll({

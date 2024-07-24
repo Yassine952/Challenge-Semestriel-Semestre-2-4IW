@@ -58,12 +58,5 @@
   });
   </script>
   
-  <style scoped>
-  .message {
-    color: green;
-  }
-  .error {
-    color: red;
-  }
-  </style>
+
   

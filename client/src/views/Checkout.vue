@@ -25,7 +25,7 @@
               {
                 name: 'Product 1',
                 description: 'Description of Product 1',
-                price: 1000, // amount in cents
+                price: 1000, 
                 quantity: 1
               }
             ]

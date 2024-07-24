@@ -1,21 +1,38 @@
 <template>
-  <div class="home">
-    <header>
-      <h1>Bienvenue chez Lemondedesmugs</h1>
-      <p>Découvrez notre collection de mugs en bois, bambou, verre et plastique.</p>
-    </header>
-    <section class="featured-products">
-      <h2>Produits</h2>
-      <div class="product-grid">
-        <div class="product" v-for="product in featuredProducts" :key="product.id">
-          <h3>{{ product.name }}</h3>
-          <p>{{ product.description }}</p>
-          <p class="price">{{ product.price }} €</p>
-          <button v-if="isAuthenticated" @click="addToCart(product.id)">Ajouter au panier</button>
-          <p v-else>Connectez-vous pour ajouter au panier</p>
+  <div class="home py-14">
+    <div class="max-w-screen-xl mx-auto px-4 text-gray-600 md:px-8">
+      <header class="text-center">
+        <h1 class="text-gray-800 text-3xl font-semibold sm:text-4xl">
+          Bienvenue chez Lemondedesmugs
+        </h1>
+        <p class="mt-3">
+          Découvrez notre collection de mugs en bois, bambou, verre et plastique.
+        </p>
+      </header>
+      <section class="featured-products mt-12">
+        <h2 class="text-gray-800 text-2xl font-semibold sm:text-3xl text-center">Produits</h2>
+        <div class="relative mt-12">
+          <ul class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <li
+              v-for="product in featuredProducts"
+              :key="product.id"
+              class="bg-white space-y-3 p-4 border rounded-lg"
+            >
+              <h5 class="text-lg font-semibold text-gray-800">{{ product.name }}</h5>
+              <p class="mt-2 text-base">{{ product.description }}</p>
+              <p class="price text-xl text-center font-bold">{{ product.price }} €</p>
+              <button
+                v-if="isAuthenticated"
+                @click="addToCart(product.id)" :disabled="product.stock === 0" class="w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 rounded-lg duration-150 disabled:opacity-50">
+                  {{ product.stock === 0 ? 'Stock épuisé' : 'Ajouter au panier' }}
+
+              </button>
+              <p v-else class="text-red-600">Connectez-vous pour ajouter au panier</p>
+            </li>
+          </ul>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   </div>
 </template>
 
@@ -52,61 +69,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style scoped>
-.home {
-  padding: 20px;
-}
-
-header {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.featured-products {
-  text-align: center;
-}
-
-.product-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-}
-
-.product {
-  border: 1px solid #ccc;
-  padding: 20px;
-  border-radius: 8px;
-  width: calc(33.333% - 40px);
-  box-sizing: border-box;
-  text-align: center;
-}
-
-.product img {
-  max-width: 100%;
-  height: auto;
-}
-
-.product h3 {
-  margin: 10px 0;
-}
-
-.product .price {
-  color: #d32f2f;
-  font-weight: bold;
-}
-
-button {
-  background-color: #d32f2f;
-  color: white;
-  border: none;
-  padding: 10px;
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-button:hover {
-  background-color: #b71c1c;
-}
-</style>

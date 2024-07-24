@@ -4,7 +4,7 @@ import Product from '../models/Product.js';
 import { Op } from 'sequelize';
 import cron from 'node-cron';
 
-const RESERVATION_TIME = 1 * 60 * 1000; // 15 minutes in milliseconds
+const RESERVATION_TIME = 1 * 60 * 1000;
 
 export const cleanExpiredItems = async () => {
   const now = new Date();
@@ -54,7 +54,6 @@ export const getCart = async (req, res) => {
   }
 };
 
-// Ajouter un produit au panier
 export const addToCart = async (req, res) => {
   const { productId, quantity } = req.body;
   const userId = req.user.id;

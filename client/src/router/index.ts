@@ -13,8 +13,9 @@ import Cart from '../views/Cart.vue';
 import Profile from '../views/Profile.vue';
 import PrivacyPolicy from '../views/PrivacyPolicy.vue';
 import LegalMentions from '../views/LegalMentions.vue';
+import TermsAndConditions from '../views/TermsAndConditions.vue';
 import { jwtDecode } from 'jwt-decode';
-
+import NotFound from '../views/NotFound.vue';
 interface DecodedToken {
   role: string;
 }
@@ -24,6 +25,7 @@ const routes: Array<RouteRecordRaw> = [
   { path: '/login', name: 'Login', component: Login },
   { path: '/register', name: 'Register', component: Register },
   { path: '/privacy-policy', name: 'PrivacyPolicy', component: PrivacyPolicy },
+  { path: '/terms-and-conditions', name: 'TermsAndConditions', component: TermsAndConditions },
   { path: '/legal-mentions', name: 'LegalMentions', component: LegalMentions },
   { path: '/forgot-password', name: 'ForgotPassword', component: ForgotPassword },
   { path: '/reset-password/:token', name: 'ResetPassword', component: ResetPassword },
@@ -33,7 +35,9 @@ const routes: Array<RouteRecordRaw> = [
   { path: '/search', name: 'ProductSearch', component: ProductSearch },
   { path: '/cart', name: 'Cart', component: Cart, meta: { requiresAuth: true } },
   { path: '/profile', name: 'Profile', component: Profile, meta: { requiresAuth: true } },
-  { path: '/admin-dashboard', name: 'AdminDashboard', component: AdminDashboard, meta: { requiresAuth: true, requiresRole: 'ROLE_ADMIN' } }
+  { path: '/admin-dashboard', name: 'AdminDashboard', component: AdminDashboard, meta: { requiresAuth: true, requiresRole: 'ROLE_ADMIN' } },
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }
+  
 ];
 
 const router = createRouter({

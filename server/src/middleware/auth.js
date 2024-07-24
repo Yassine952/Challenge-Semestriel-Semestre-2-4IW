@@ -1,4 +1,3 @@
-// middleware/auth.js
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
@@ -15,7 +14,7 @@ export const authenticateToken = async (req, res, next) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    req.user = user; // Attach the user info to the request
+    req.user = user; 
     next();
   } catch (err) {
     return res.status(403).json({ message: 'Invalid token' });

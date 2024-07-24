@@ -1,9 +1,7 @@
-// controllers/userController.js
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import { validationResult } from 'express-validator';
 
-// Récupération de tous les utilisateurs
 export const getUsers = async (req, res) => {
   console.log('getUsers called');
   try {
@@ -15,7 +13,6 @@ export const getUsers = async (req, res) => {
   }
 };
 
-// Récupération d'un utilisateur par ID
 export const getUserById = async (req, res) => {
   console.log('getUserById called');
   try {
@@ -28,7 +25,6 @@ export const getUserById = async (req, res) => {
   }
 };
 
-// Création d'un nouvel utilisateur
 export const createUser = async (req, res) => {
   console.log('createUser called');
   const errors = validationResult(req);
@@ -51,7 +47,7 @@ export const createUser = async (req, res) => {
       password: hashedPassword,
       shippingAddress,
       role,
-      isConfirmed: true // Automatically confirm the user
+      isConfirmed: true 
     });
 
     res.status(201).json(newUser);
@@ -61,7 +57,6 @@ export const createUser = async (req, res) => {
   }
 };
 
-// Mise à jour d'un utilisateur existant
 export const updateUser = async (req, res) => {
   console.log('updateUser called');
   const { firstName, lastName, email, password, shippingAddress, role } = req.body;
@@ -83,7 +78,6 @@ export const updateUser = async (req, res) => {
   }
 };
 
-// Suppression d'un utilisateur
 export const deleteUser = async (req, res) => {
   console.log('deleteUser called');
   try {

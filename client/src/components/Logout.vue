@@ -6,25 +6,12 @@
 export default {
   methods: {
     logout() {
-      localStorage.removeItem('token');
+      console.log('Before removing:', localStorage.getItem('role'));
+      localStorage.removeItem('role');
+      console.log('After removing:', localStorage.getItem('role'));
       this.$emit('loggedOut');
       this.$router.push('/login');
     }
   }
 };
 </script>
-
-<style scoped>
-button {
-  background-color: #f44336;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  cursor: pointer;
-}
-</style>

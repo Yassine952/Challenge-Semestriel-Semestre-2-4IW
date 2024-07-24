@@ -20,7 +20,7 @@ const transporter = nodemailer.createTransport({
 
 let loginAttempts = {};
 
-const passwordResetCache = new NodeCache({ stdTTL: 15 * 60, checkperiod: 60 }); // TTL de 15 minutes
+const passwordResetCache = new NodeCache({ stdTTL: 15 * 60, checkperiod: 60 });
 
 export const register = async (req, res) => {
   const errors = validationResult(req);
@@ -28,7 +28,7 @@ export const register = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { firstName, lastName, email, password, shippingAddress, role = 'ROLE_USER' } = req.body; // Default role is ROLE_USER
+  const { firstName, lastName, email, password, shippingAddress, role = 'ROLE_USER' } = req.body;
   try {
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
