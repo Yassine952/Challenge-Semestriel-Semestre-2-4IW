@@ -22,7 +22,17 @@ router.post(
   createUser
 );
 
-router.put('/:id', authorize(['ROLE_ADMIN']), updateUser);
+router.put(
+  '/:id',
+  [
+    check('email', 'Please include a valid email').isEmail(),
+    check('password', 'Password must be at least 12 characters long and contain symbols, numbers, lowercase, and uppercase letters')
+      .isLength({ min: 12 })
+      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/)
+  ],
+  authorize(['ROLE_ADMIN']),
+  updateUser
+);
 router.delete('/:id', authorize(['ROLE_ADMIN']), deleteUser);
 
 export default router;

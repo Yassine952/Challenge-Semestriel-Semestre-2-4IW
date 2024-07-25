@@ -63,13 +63,15 @@
 import { defineComponent, ref, onMounted } from 'vue';
 import { fetchUsers, createUser as createNewUser, updateUser as updateExistingUser } from '../services/userService';
 import ConfirmButton from '../components/ConfirmButton.vue';
+import { User } from '../types/User';
 
 export default defineComponent({
   name: 'AdminDashboard',
   components: { ConfirmButton },
   setup() {
-    const users = ref([]);
-    const newUser = ref({
+    const users = ref<User[]>([]);
+    const newUser = ref<User>({
+      id: 0,
       firstName: '',
       lastName: '',
       email: '',
@@ -77,7 +79,7 @@ export default defineComponent({
       shippingAddress: '',
       role: 'ROLE_USER',
     });
-    const editUserForm = ref(null);
+    const editUserForm = ref<User | null>(null);
     const showAddUserForm = ref(false);
     const message = ref('');
     const error = ref('');
@@ -95,22 +97,24 @@ export default defineComponent({
         await createNewUser(newUser.value);
         loadUsers();
         showAddUserForm.value = false;
-        message.value = 'User added successfully';
+        message.value = 'Utilisateur ajouté';
       } catch (err) {
-        error.value = 'Error adding user';
+        error.value = 'Erreur en ajoutant un utilisateur';
       }
     };
 
-    const editUser = (user) => {
+    const editUser = (user: User) => {
       editUserForm.value = { ...user, password: '' }; 
     };
 
-    const updateUser = async (id) => {
+    const updateUser = async (id: number) => {
       try {
-        await updateExistingUser(id, editUserForm.value);
-        loadUsers();
-        editUserForm.value = null;
-        message.value = 'User updated successfully';
+        if (editUserForm.value) {
+          await updateExistingUser(id, editUserForm.value);
+          loadUsers();
+          editUserForm.value = null;
+          message.value = 'User updated successfully';
+        }
       } catch (err) {
         error.value = 'Error updating user';
       }
@@ -133,5 +137,3 @@ export default defineComponent({
   },
 });
 </script>
-
-

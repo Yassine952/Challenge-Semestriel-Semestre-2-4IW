@@ -4,7 +4,7 @@ import Product from '../models/Product.js';
 import { Op } from 'sequelize';
 import cron from 'node-cron';
 
-const RESERVATION_TIME = 15 * 60 * 1000;
+const RESERVATION_TIME = 1 * 60 * 1000;
 
 export const cleanExpiredItems = async () => {
   const now = new Date();

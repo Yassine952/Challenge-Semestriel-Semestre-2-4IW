@@ -24,4 +24,8 @@ export default defineComponent({
   },
 });
 </script>
-
+<style>
+#app {
+height: 100vh;
+}
+</style>
