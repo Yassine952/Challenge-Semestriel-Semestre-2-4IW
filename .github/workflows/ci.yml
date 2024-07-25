@@ -35,4 +35,3 @@ jobs:
 
     - name: Stop Docker containers
       run: sudo docker-compose -f docker-compose.prod.yml down
-.
