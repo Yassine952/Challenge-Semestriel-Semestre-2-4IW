@@ -1,0 +1,27 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:20.10.7
+        options: --privileged
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build Docker containers
+      run: sudo docker-compose -f docker-compose.prod.yml build
+
+    - name: Run tests
+      run: sudo docker-compose -f docker-compose.prod.yml up -d && sudo docker-compose -f docker-compose.prod.yml exec server npm run test
+
+    - name: Stop Docker containers
+      run: sudo docker-compose -f docker-compose.prod.yml down
