@@ -1,11 +1,11 @@
 import User from '../models/User.js';
+import UserMongo from '../models/UserMongo.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
 import nodemailer from 'nodemailer';
 import cron from 'node-cron';
 import NodeCache from 'node-cache';
-import sequelize from '../config/database.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -38,6 +38,26 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = await User.create({ firstName, lastName, email, password: hashedPassword, shippingAddress, role });
 
+    // Synchroniser avec MongoDB
+    try {
+      const userMongo = new UserMongo({
+        userId: user.id, // Utilisation du champ userId
+        firstName,
+        lastName,
+        email,
+        password: hashedPassword,
+        shippingAddress,
+        role,
+        isConfirmed: true
+      });
+      await userMongo.save();
+    } catch (mongoError) {
+      console.error('MongoDB Error:', mongoError); // Ajoutez ce log
+      // Si MongoDB échoue, supprimer l'utilisateur de PostgreSQL pour éviter les incohérences
+      await user.destroy();
+      return res.status(500).json({ message: "Erreur lors de la synchronisation avec MongoDB" });
+    }
+
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     const url = `${process.env.BASE_URL}/api/auth/confirm/${token}`;
 
@@ -49,6 +69,7 @@ export const register = async (req, res) => {
 
     res.status(201).json({ message: "veuillez vérifier votre email pour confirmer votre compte." });
   } catch (err) {
+    console.error('Server Error:', err); // Ajoutez ce log
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
@@ -66,8 +87,15 @@ export const confirmEmail = async (req, res) => {
     user.isConfirmed = true;
     await user.save();
 
+    const userMongo = await UserMongo.findOne({ userId: user.id });
+    if (userMongo) {
+      userMongo.isConfirmed = true;
+      await userMongo.save();
+    }
+
     res.status(200).json({ message: "email confirmé" });
   } catch (err) {
+    console.error('Server Error:', err); // Ajoutez ce log
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
@@ -79,8 +107,8 @@ export const login = async (req, res) => {
   if (loginAttempts[email] && loginAttempts[email].count >= 3 && currentTime - loginAttempts[email].lastAttempt < 60000) {
     await transporter.sendMail({
       to: email,
-      subject: 'Compte verrouillé en raison dun trop grand nombre de tentatives de connexion',
-      html: 'Votre compte a été verrouillé en raison dun trop grand nombre de tentatives de connexion. Veuillez réessayer après un certain temps.'
+      subject: 'Compte verrouillé en raison d\'un trop grand nombre de tentatives de connexion',
+      html: 'Votre compte a été verrouillé en raison d\'un trop grand nombre de tentatives de connexion. Veuillez réessayer après un certain temps.'
     });
 
     return res.status(403).json({ message: "Trop de tentatives de connexion. Veuillez réessayer après un certain temps." });
@@ -108,6 +136,7 @@ export const login = async (req, res) => {
 
     res.status(200).json({ token });
   } catch (err) {
+    console.error('Server Error:', err); // Ajoutez ce log
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
@@ -134,8 +163,15 @@ export const resetPasswordWithToken = async (req, res) => {
     user.passwordLastChanged = Date.now();
     await user.save();
 
+    const userMongo = await UserMongo.findOne({ userId: user.id });
+    if (userMongo) {
+      userMongo.password = hashedPassword;
+      await userMongo.save();
+    }
+
     res.status(200).json({ message: "Mot de passe réinitialisé avec succès" });
   } catch (err) {
+    console.error('Server Error:', err); // Ajoutez ce log
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
@@ -167,6 +203,7 @@ export const forgotPassword = async (req, res) => {
 
     res.status(200).json({ message: "E-mail de réinitialisation du mot de passe envoyé" });
   } catch (err) {
+    console.error('Server Error:', err); // Ajoutez ce log
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
@@ -182,6 +219,13 @@ cron.schedule('0 0 * * *', async () => {
         if (passwordAge > 60 * 24 * 60 * 60 * 1000) { 
           user.passwordNeedsReset = true;
           await user.save();
+
+          const userMongo = await UserMongo.findOne({ userId: user.id });
+          if (userMongo) {
+            userMongo.passwordNeedsReset = true;
+            await userMongo.save();
+          }
+
           await transporter.sendMail({
             to: user.email,
             subject: 'Réinitialisation du mot de passe requise',

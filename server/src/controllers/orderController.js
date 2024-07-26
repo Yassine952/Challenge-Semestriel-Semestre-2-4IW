@@ -119,3 +119,14 @@ export const createOrder = async (req, res) => {
     res.status(500).json({ error: 'Failed to create order' });
   }
 };
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.findAll({
+      include: [OrderItem]
+    });
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

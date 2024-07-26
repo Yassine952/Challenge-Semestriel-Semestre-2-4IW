@@ -15,7 +15,7 @@
           <ul class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <li
               v-for="product in featuredProducts"
-              :key="product.id"
+              :key="product.productId"
               class="bg-white space-y-3 p-4 border rounded-lg"
             >
               <h5 class="text-lg font-semibold text-gray-800">{{ product.name }}</h5>
@@ -23,7 +23,7 @@
               <p class="price text-xl text-center font-bold">{{ product.price }} €</p>
               <button
                 v-if="isAuthenticated"
-                @click="addToCart(product.id)" :disabled="product.stock === 0" class="w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 rounded-lg duration-150 disabled:opacity-50">
+                @click="addToCart(product.productId)" :disabled="product.stock === 0" class="w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 rounded-lg duration-150 disabled:opacity-50">
                   {{ product.stock === 0 ? 'Stock épuisé' : 'Ajouter au panier' }}
 
               </button>
@@ -55,8 +55,8 @@ export default defineComponent({
     };
 
     const addToCartHandler = async (productId: number) => {
-      await addToCart({ productId, quantity: 1 });
-      alert('Produit ajouté au panier');
+      await addToCart(productId, 1);
+      alert('Produit ajouté au panier');;
     };
 
     onMounted(loadProducts);

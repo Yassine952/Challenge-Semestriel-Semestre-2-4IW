@@ -9,6 +9,7 @@ import profileRouter from './routes/profile.js';
 import orderRouter from './routes/order.js';
 import userRoutes from './routes/user.js';
 import sequelize from './config/database.js';
+import connectMongoDB from './config/mongo.js';
 import dotenv from 'dotenv';
 import cron from 'node-cron';
 import { cleanExpiredItems } from './controllers/cartController.js';
@@ -22,6 +23,8 @@ server.use(cors());
 
 server.post('/api/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
 server.use(express.json());
+
+connectMongoDB();
 
 sequelize.authenticate()
   .then(() => {

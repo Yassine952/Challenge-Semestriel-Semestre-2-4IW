@@ -25,7 +25,7 @@
 
     <div v-if="editUserForm" class="mt-6 p-6 bg-white shadow-md rounded-md">
       <h2 class="text-2xl font-semibold mb-4">Modifier un utilisateur</h2>
-      <form @submit.prevent="updateUser(editUserForm.id)" class="space-y-4">
+      <form @submit.prevent="updateUser(editUserForm.userId)" class="space-y-4">
         <input v-model="editUserForm.firstName" placeholder="Prénom" required class="w-full px-3 py-2 border rounded-md">
         <input v-model="editUserForm.lastName" placeholder="Nom de famille" required class="w-full px-3 py-2 border rounded-md">
         <input v-model="editUserForm.email" placeholder="Email" required class="w-full px-3 py-2 border rounded-md">
@@ -45,15 +45,25 @@
 
     <h2 class="text-2xl font-semibold mt-8 mb-4">Liste des utilisateurs</h2>
     <ul class="space-y-4">
-      <li v-for="user in users" :key="user.id" class="p-4 bg-white shadow-md rounded-md flex justify-between items-center">
+      <li v-for="user in users" :key="user.userId" class="p-4 bg-white shadow-md rounded-md flex justify-between items-center">
         <span>{{ user.firstName }} {{ user.lastName }} - {{ user.email }}</span>
         <div class="flex space-x-2">
           <button @click="editUser(user)" class="text-blue-600 hover:underline">Modifier</button>
           <confirm-button
-            :delete-url="`/api/users/${user.id}`"
+            :delete-url="`/api/users/${user.userId}`"
             :on-success="loadUsers"
           />
         </div>
+      </li>
+    </ul>
+
+    <h2 class="text-2xl font-semibold mt-8 mb-4">Liste des commandes</h2>
+    <ul class="space-y-4">
+      <li v-for="order in orders" :key="order.id" class="p-4 bg-white shadow-md rounded-md">
+        <span>Commande #{{ order.id }} - {{ order.totalAmount }} € - {{ order.status }}</span>
+        <button @click="downloadInvoice(order.id)" class="text-indigo-600 hover:underline">
+          Télécharger la facture
+        </button>
       </li>
     </ul>
   </div>
@@ -61,17 +71,19 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue';
-import { fetchUsers, createUser as createNewUser, updateUser as updateExistingUser } from '../services/userService';
+import { fetchUsers, createUser as createNewUser, updateUser as updateExistingUser, fetchAllOrders, downloadInvoice } from '../services/userService';
 import ConfirmButton from '../components/ConfirmButton.vue';
 import { User } from '../types/User';
+import { Order } from '../types/Order';
 
 export default defineComponent({
   name: 'AdminDashboard',
   components: { ConfirmButton },
   setup() {
     const users = ref<User[]>([]);
+    const orders = ref<Order[]>([]);
     const newUser = ref<User>({
-      id: 0,
+      userId: 0,
       firstName: '',
       lastName: '',
       email: '',
@@ -89,6 +101,14 @@ export default defineComponent({
         users.value = await fetchUsers();
       } catch (err) {
         error.value = 'Error loading users';
+      }
+    };
+
+    const loadOrders = async () => {
+      try {
+        orders.value = await fetchAllOrders();
+      } catch (err) {
+        error.value = 'Error loading orders';
       }
     };
 
@@ -120,10 +140,14 @@ export default defineComponent({
       }
     };
 
-    onMounted(loadUsers);
+    onMounted(() => {
+      loadUsers();
+      loadOrders();
+    });
 
     return {
       users,
+      orders,
       newUser,
       editUserForm,
       showAddUserForm,
@@ -133,6 +157,8 @@ export default defineComponent({
       editUser,
       updateUser,
       loadUsers,
+      loadOrders,
+      downloadInvoice
     };
   },
 });

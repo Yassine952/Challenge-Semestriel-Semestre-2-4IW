@@ -17,9 +17,16 @@ apiClient.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+}, (error) => {
+  return Promise.reject(error);
 });
 
 export const fetchUsers = async (): Promise<User[]> => {
+  const response = await apiClient.get('/');
+  return response.data;
+};
+
+export const fetchOrders = async (): Promise<Order[]> => {
   const response = await apiClient.get('/');
   return response.data;
 };
@@ -49,13 +56,29 @@ export const fetchUserProfile = async (): Promise<User> => {
 };
 
 export const fetchUserOrders = async (): Promise<Order[]> => {
-  const response = await apiClient.get('/orders');
+  const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/orders`, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+  });
+  console.log("Orders response from API:", response.data);
+  return response.data;
+};
+
+export const fetchAllOrders = async (): Promise<Order[]> => {
+  const response = await apiClient.get('/orders', {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+  });
   return response.data;
 };
 
 export const downloadInvoice = async (orderId: number) => {
   const token = localStorage.getItem('token');
-  const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/orders/${orderId}/invoice`, {
+  const response = await axios.get(`${API_URL}/orders/${orderId}/invoice`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
@@ -69,4 +92,5 @@ export const downloadInvoice = async (orderId: number) => {
   link.setAttribute('download', `invoice_${orderId}.pdf`);
   document.body.appendChild(link);
   link.click();
+  link.remove();
 };

@@ -16,6 +16,8 @@ apiClient.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+}, (error) => {
+  return Promise.reject(error);
 });
 
 export const getCart = async (): Promise<Cart> => {
@@ -23,17 +25,21 @@ export const getCart = async (): Promise<Cart> => {
   return response.data;
 };
 
-export const addToCart = async (item: { productId: number, quantity: number }): Promise<Cart> => {
-  const response = await apiClient.post('/add', item);
+export const addToCart = async (productId: number, quantity: number): Promise<Cart> => {
+  const response = await apiClient.post('/add', { productId, quantity });
   return response.data;
 };
 
 export const removeFromCart = async (productId: number): Promise<Cart> => {
-  const response = await apiClient.post('/remove', { productId });
+  const response = await apiClient.delete(`/remove/${productId}`);
   return response.data;
 };
 
 export const clearCart = async (): Promise<Cart> => {
-  const response = await apiClient.post('/clear');
+  const response = await apiClient.delete('/clear');
   return response.data;
+};
+
+export const clearCartAfterPayment = async (): Promise<void> => {
+  await apiClient.post('/clear-after-payment');
 };
