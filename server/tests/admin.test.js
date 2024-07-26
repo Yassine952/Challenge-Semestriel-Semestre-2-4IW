@@ -12,7 +12,6 @@ import User from '../src/models/User.js';
 import sequelize from '../src/config/database.js';
 import { jest } from '@jest/globals';
 
-// Mock des modèles Sequelize
 jest.mock('../src/models/Cart.js');
 jest.mock('../src/models/CartItem.js');
 jest.mock('../src/models/Product.js');
@@ -39,7 +38,6 @@ describe('Admin Operations', () => {
   beforeAll(async () => {
     await sequelize.sync({ force: true });
 
-    // Create admin user
     await User.create({
       id: 5,
       firstName: 'Admin',

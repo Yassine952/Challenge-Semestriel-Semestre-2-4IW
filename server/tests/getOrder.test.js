@@ -1,18 +1,14 @@
-// Import des modules nécessaires
 import request from 'supertest';
 import express from 'express';
 import { getOrder } from '../src/controllers/orderController';
 import jwt from 'jsonwebtoken';
 import SequelizeMock from 'sequelize-mock';
 
-// Créez une application express fictive
 const app = express();
 app.use(express.json());
 
-// Configuration de l'application pour utiliser la route de test
 app.get('/api/orders/:id', getOrder);
 
-// Simulations Sequelize pour Order et OrderItem
 const DBConnectionMock = new SequelizeMock();
 const OrderMock = DBConnectionMock.define('Order', {
   id: 1,
@@ -26,7 +22,6 @@ const OrderItemMock = DBConnectionMock.define('OrderItem', {
   price: 50,
 });
 
-// Mock pour la fonction findOne de Order
 OrderMock.$queueResult([
   OrderMock.build({
     id: 1,
@@ -38,12 +33,10 @@ OrderMock.$queueResult([
   }),
 ]);
 
-// Mock pour la fonction findAll de OrderItem
 OrderItemMock.$queueResult([
   OrderItemMock.build({ orderId: 1, productId: 1, quantity: 2, price: 50 }),
 ]);
 
-// Mock du middleware d'authentification
 jest.mock('../src/middleware/auth', () => ({
   authenticateToken: (req, res, next) => {
     req.user = { id: 1, role: 'ROLE_USER' };
@@ -70,7 +63,7 @@ describe('GET /api/orders/:id', () => {
   });
 
   it('should return 404 if order not found', async () => {
-    OrderMock.$queueResult(null); // Simulez une commande non trouvée
+    OrderMock.$queueResult(null); 
 
     const token = jwt.sign({ userId: 1 }, process.env.JWT_SECRET);
 

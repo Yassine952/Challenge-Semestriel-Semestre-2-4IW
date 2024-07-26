@@ -12,13 +12,11 @@ import CartItem from '../src/models/CartItem.js';
 const app = express();
 app.use(express.json());
 
-// Mock middleware d'authentification
 const mockAuthMiddleware = (req, res, next) => {
-  req.user = { id: 1 }; // Simuler un utilisateur avec l'ID 1
+  req.user = { id: 1 };
   next();
 };
 
-// Routes
 app.post('/api/auth/register', register);
 app.post('/api/auth/login', login);
 app.post('/api/cart/add', mockAuthMiddleware, addToCart);
@@ -31,10 +29,8 @@ let mockProductId;
 let token;
 
 beforeAll(async () => {
-  // Hacher le mot de passe avant de créer l'utilisateur
   const hashedPassword = await bcrypt.hash('Testtestudyr&1', 12);
 
-  // Créer un utilisateur et un produit dans la base de données de test
   await User.create({ id: 1, firstName: 'yass', lastName: 'abd', email: 'test.test@test.com', password: hashedPassword, shippingAddress:'50 rue du test', isConfirmed: true });
   
   const product = await Product.create({ name: 'Product 1', price: 100,category :'test', stock: 10 });
@@ -42,7 +38,6 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Nettoyer la base de données de test
   await CartItem.destroy({ where: {} });
   await Cart.destroy({ where: {} });
   await Product.destroy({ where: {} });
@@ -73,8 +68,7 @@ describe('User Registration and Authentication', () => {
         password: 'Testtestudyr&1',
       });
 
-    console.log(response.body); // Ajoutez ce log pour voir la réponse de l'API
-
+    console.log(response.body);
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('token');
     token = response.body.token;
@@ -101,7 +95,7 @@ describe('Cart Operations', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({
         productId: mockProductId,
-        quantity: 100, // Quantité élevée pour simuler le stock insuffisant
+        quantity: 100, 
       });
 
     expect(response.status).toBe(400);

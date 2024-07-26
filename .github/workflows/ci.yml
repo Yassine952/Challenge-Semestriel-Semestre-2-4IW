@@ -24,15 +24,14 @@ jobs:
         if [ ! -f mongo/.env ]; then echo "MONGO_INITDB_ROOT_USERNAME=mongoadmin\nMONGO_INITDB_ROOT_PASSWORD=secret" > mongo/.env; fi
         if [ ! -f postgres/.env ]; then echo "POSTGRES_USER=admin\nPOSTGRES_PASSWORD=secret" > postgres/.env; fi
         if [ ! -f client/.env ]; then echo "REACT_APP_API_URL=http://localhost:8000" > client/.env; fi
-        if [ ! -f nginx/.env ]; then echo "NGINX_HOST=localhost\nNGINX_PORT=80" > server/.env; fi
-        if [ ! -f server/.env ]; then echo "DATABASE_URL=postgres://admin:secret&1@postgres:5432/mydatabase" > nginx/.env; fi
-
+        if [ ! -f nginx/.env ]; then echo "NGINX_HOST=localhost\nNGINX_PORT=80" > nginx/.env; fi
+        if [ ! -f server/.env ]; then echo "DATABASE_URL=postgres://admin:secret&1@postgres:5432/mydatabase" > server/.env; fi
 
     - name: Build Docker containers
       run: sudo docker-compose -f docker-compose.prod.yml build
 
     - name: Run tests
-      run: sudo docker-compose -f docker-compose.prod.yml up -d && sudo docker-compose -f docker-compose.prod.yml exec server npm run test
+      run: sudo docker-compose -f docker-compose.prod.yml up -d && sudo docker-compose -f docker-compose.prod.yml exec -T server npm run test
 
     - name: Stop Docker containers
       run: sudo docker-compose -f docker-compose.prod.yml down

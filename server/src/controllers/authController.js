@@ -38,10 +38,9 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = await User.create({ firstName, lastName, email, password: hashedPassword, shippingAddress, role });
 
-    // Synchroniser avec MongoDB
     try {
       const userMongo = new UserMongo({
-        userId: user.id, // Utilisation du champ userId
+        userId: user.id, 
         firstName,
         lastName,
         email,
@@ -52,8 +51,7 @@ export const register = async (req, res) => {
       });
       await userMongo.save();
     } catch (mongoError) {
-      console.error('MongoDB Error:', mongoError); // Ajoutez ce log
-      // Si MongoDB échoue, supprimer l'utilisateur de PostgreSQL pour éviter les incohérences
+      console.error('MongoDB Error:', mongoError); 
       await user.destroy();
       return res.status(500).json({ message: "Erreur lors de la synchronisation avec MongoDB" });
     }
@@ -69,7 +67,7 @@ export const register = async (req, res) => {
 
     res.status(201).json({ message: "veuillez vérifier votre email pour confirmer votre compte." });
   } catch (err) {
-    console.error('Server Error:', err); // Ajoutez ce log
+    console.error('Server Error:', err); 
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
@@ -95,7 +93,7 @@ export const confirmEmail = async (req, res) => {
 
     res.status(200).json({ message: "email confirmé" });
   } catch (err) {
-    console.error('Server Error:', err); // Ajoutez ce log
+    console.error('Server Error:', err); 
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
@@ -136,7 +134,7 @@ export const login = async (req, res) => {
 
     res.status(200).json({ token });
   } catch (err) {
-    console.error('Server Error:', err); // Ajoutez ce log
+    console.error('Server Error:', err); 
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
@@ -171,7 +169,7 @@ export const resetPasswordWithToken = async (req, res) => {
 
     res.status(200).json({ message: "Mot de passe réinitialisé avec succès" });
   } catch (err) {
-    console.error('Server Error:', err); // Ajoutez ce log
+    console.error('Server Error:', err);
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
@@ -203,7 +201,7 @@ export const forgotPassword = async (req, res) => {
 
     res.status(200).json({ message: "E-mail de réinitialisation du mot de passe envoyé" });
   } catch (err) {
-    console.error('Server Error:', err); // Ajoutez ce log
+    console.error('Server Error:', err);
     res.status(500).json({ message: "Erreur serveur" });
   }
 };

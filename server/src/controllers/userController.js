@@ -17,7 +17,7 @@ export const getUsers = async (req, res) => {
 export const getUserById = async (req, res) => {
   console.log('getUserById called');
   try {
-    const user = await UserMongo.findOne({ userId: req.params.id }); // Utilisation de MongoDB pour récupérer un utilisateur par ID
+    const user = await UserMongo.findOne({ userId: req.params.id });
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.status(200).json(user);
   } catch (error) {
@@ -51,7 +51,6 @@ export const createUser = async (req, res) => {
       isConfirmed: true 
     });
 
-    // Ajouter l'utilisateur à MongoDB
     try {
       const userMongo = new UserMongo({
         userId: newUser.id,
@@ -126,7 +125,6 @@ export const deleteUser = async (req, res) => {
     if (!deletedUser) return res.status(404).json({ message: 'User not found' });
     await deletedUser.destroy();
 
-    // Supprimer aussi dans MongoDB
     await UserMongo.findOneAndDelete({ userId: req.params.id });
 
     res.status(200).json({ message: 'User deleted' });

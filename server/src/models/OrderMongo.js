@@ -10,7 +10,7 @@ const orderItemSchema = new mongoose.Schema({
 
 const orderSchema = new mongoose.Schema({
   orderId: { type: Number, required: true },
-  userId: { type: String, required: true }, // Stocker l'ID utilisateur sous forme de chaîne
+  userId: { type: String, required: true },
   userName: { type: String, required: true },
   userAddress: { type: String, required: true },
   totalAmount: { type: Number, required: true },

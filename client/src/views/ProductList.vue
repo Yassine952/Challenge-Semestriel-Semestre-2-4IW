@@ -143,7 +143,7 @@ export default defineComponent({
     };
 
     const filterData = () => {
-      currentPage.value = 1; // Reset to first page on filter change
+      currentPage.value = 1;
     };
 
     const nextPage = () => {
