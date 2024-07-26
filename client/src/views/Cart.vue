@@ -29,7 +29,7 @@
             <h6 class="text-indigo-600 font-manrope font-bold text-2xl leading-9 w-full max-w-[176px] text-center">{{ product.price }} €</h6>
           </div>
           <confirm-button
-              :delete-url="`/api/cart/remove/${product.Product.id}`"
+              :delete-url="`/cart/remove/${product.Product.id}`"
               :on-success="loadCart"
               button-text="Retirer"
             />
@@ -43,7 +43,7 @@
         <div class="flex items-center flex-col sm:flex-row justify-center gap-3 mt-8">
           
              <confirm-button
-        :delete-url="'/api/cart/clear'"
+        :delete-url="'/cart/clear'"
         :on-success="loadCart"
         button-text="Vider le panier"
       

@@ -36,7 +36,7 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <router-link :to="`/edit-product/${row.productId}`" class="text-indigo-600 hover:text-indigo-400">Modifier</router-link>
-              <confirm-button :delete-url="`/api/products/${row.productId}`" :onSuccess="loadProducts" />
+              <confirm-button :delete-url="`/products/${row.productId}`" :onSuccess="loadProducts" />
             </td>
           </tr>
         </tbody>

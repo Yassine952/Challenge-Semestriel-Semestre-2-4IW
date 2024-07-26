@@ -50,7 +50,7 @@
         <div class="flex space-x-2">
           <button @click="editUser(user)" class="text-blue-600 hover:underline">Modifier</button>
           <confirm-button
-            :delete-url="`/api/users/${user.userId}`"
+            :delete-url="`/users/${user.userId}`"
             :on-success="loadUsers"
           />
         </div>

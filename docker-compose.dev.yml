@@ -4,8 +4,9 @@ services:
   client:
     image: node:20.0.0-alpine
     user: node
+    entrypoint: sh -c
     working_dir: /home/node
-    command: sh -c "npm install && npm run dev"
+    command: '"npm install && npm run dev"'
     ports:
       - '5173:5173'
     volumes:
@@ -24,6 +25,7 @@ services:
       - ./server:/home/node
     depends_on:
       - postgres
+      - mongo
     env_file:
       - ./server/.env
 
@@ -37,6 +39,16 @@ services:
     env_file:
       - ./postgres/.env
 
+  mongo:
+    image: mongo:latest
+    restart: always
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - '27017:27017'
+    env_file:
+      - ./mongo/.env
+
   adminer:
     image: adminer
     restart: always
@@ -45,15 +57,6 @@ services:
     depends_on:
       - postgres
 
-  nginx:
-    image: nginx:latest
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - client
-      - server
-
 volumes:
   postgres-data:
+  mongo-data:

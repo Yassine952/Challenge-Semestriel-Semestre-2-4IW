@@ -1,18 +1,7 @@
-# challenge-template
+add .env on server / client
 
-## Requirements
+as .env.example on server for server 
 
-- Docker
-- Docker Compose
+as .env.example on client for client
 
-## Usage
-
-### Development
-
-```bash
-docker compose up --detach --build
-```
-
-### Production
-
-TODO
+docker-compose -f docker-compose.dev.yml up -d --build

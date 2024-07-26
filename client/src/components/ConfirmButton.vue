@@ -70,7 +70,8 @@ export default defineComponent({
       isLoading.value = true;
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(props.deleteUrl, {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        await axios.delete(`${apiUrl}${props.deleteUrl}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }

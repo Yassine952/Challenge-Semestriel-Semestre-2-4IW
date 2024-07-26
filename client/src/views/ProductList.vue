@@ -66,7 +66,7 @@
             <td class="px-6 py-4 whitespace-nowrap">{{ product.onSale ? 'Oui' : 'Non' }}</td>
             <td class="px-6 py-4 whitespace-nowrap">
               <router-link :to="`/edit-product/${product.productId}`" class="text-indigo-600 hover:text-indigo-400">Modifier</router-link>
-              <confirm-button :delete-url="`/api/products/${product.productId}`" :onSuccess="loadProducts" />
+              <confirm-button :delete-url="`/products/${product.productId}`" :onSuccess="loadProducts" />
             </td>
           </tr>
         </tbody>

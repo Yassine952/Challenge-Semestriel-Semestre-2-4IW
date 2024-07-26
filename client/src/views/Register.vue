@@ -6,7 +6,7 @@
           <h3 class="text-gray-800 text-2xl font-bold sm:text-3xl">
             S'inscrire
           </h3>
-          <p class="">
+          <p>
             Vous avez déjà un compte ?
             <router-link to="/login" class="font-medium text-indigo-600 hover:text-indigo-500">
               Connectez-vous
@@ -122,6 +122,7 @@ export default defineComponent({
       }
 
       try {
+        console.log('Envoi de la requête d\'inscription...');
         const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
           method: 'POST',
           headers: {
@@ -135,7 +136,11 @@ export default defineComponent({
             shippingAddress: shippingAddress.value
           }),
         });
+
+        console.log('Réponse reçue:', response);
         const data = await response.json();
+        console.log('Données reçues:', data);
+
         if (response.ok) {
           alert('Inscription réussie ! Vous allez recevoir un mail pour confirmer votre compte.');
           window.dispatchEvent(new CustomEvent('loginStatusChanged'));
@@ -144,6 +149,7 @@ export default defineComponent({
           error.value = `L'inscription a échoué : ${data.errors ? data.errors[0].msg : data.message}`;
         }
       } catch (err) {
+        console.error('Erreur lors de l\'inscription:', err);
         error.value = `L'inscription a échoué : ${err.message}`;
       }
     };
@@ -162,4 +168,8 @@ export default defineComponent({
 });
 </script>
 
-
+<style scoped>
+.error {
+  color: red;
+}
+</style>
