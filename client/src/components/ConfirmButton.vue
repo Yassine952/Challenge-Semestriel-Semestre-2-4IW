@@ -101,7 +101,7 @@ export default defineComponent({
 .modal-enter-active, .modal-leave-active {
   transition: opacity 0.3s;
 }
-.modal-enter, .modal-leave-to /* .modal-leave-active in <2.1.8 */ {
+.modal-enter, .modal-leave-to {
   opacity: 0;
 }
 </style>

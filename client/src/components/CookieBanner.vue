@@ -43,7 +43,6 @@ export default defineComponent({
       } else {
         showBanner.value = false;
         if (userCookiesPref === "false") {
-          // à faire plus tard
         }
       }
     };
