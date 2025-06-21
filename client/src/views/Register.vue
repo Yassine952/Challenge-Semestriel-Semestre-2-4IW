@@ -87,7 +87,7 @@
             S'inscrire
           </button>
         </form>
-        <p v-if="error" class="error mt-4 text-red-500">{{ error }}</p>
+
       </div>
     </div>
   </main>
@@ -96,28 +96,29 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useNotifications } from '../composables/useNotifications';
 
 export default defineComponent({
   name: 'Register',
   setup() {
+    const { addNotification } = useNotifications();
     const firstName = ref('');
     const lastName = ref('');
     const email = ref('');
     const password = ref('');
     const shippingAddress = ref('');
     const acceptTerms = ref(false);
-    const error = ref('');
     const router = useRouter();
 
     const register = async () => {
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
       if (!passwordRegex.test(password.value)) {
-        error.value = 'Le mot de passe doit comporter au moins 12 caractères et inclure un mélange de lettres, de chiffres et de symboles.';
+        addNotification('Le mot de passe doit comporter au moins 12 caractères et inclure un mélange de lettres, de chiffres et de symboles.', 'error');
         return;
       }
 
       if (!acceptTerms.value) {
-        error.value = 'Vous devez accepter la politique de confidentialité et les conditions générales de vente.';
+        addNotification('Vous devez accepter la politique de confidentialité et les conditions générales de vente.', 'error');
         return;
       }
 
@@ -142,15 +143,15 @@ export default defineComponent({
         console.log('Données reçues:', data);
 
         if (response.ok) {
-          alert('Inscription réussie ! Vous allez recevoir un mail pour confirmer votre compte.');
+          addNotification('Inscription réussie ! Vous allez recevoir un mail pour confirmer votre compte.', 'success');
           window.dispatchEvent(new CustomEvent('loginStatusChanged'));
           router.push('/login');
         } else {
-          error.value = `L'inscription a échoué : ${data.errors ? data.errors[0].msg : data.message}`;
+          addNotification(`L'inscription a échoué : ${data.errors ? data.errors[0].msg : data.message}`, 'error');
         }
       } catch (err) {
         console.error('Erreur lors de l\'inscription:', err);
-        error.value = `L'inscription a échoué : ${err.message}`;
+        addNotification(`L'inscription a échoué : ${err.message}`, 'error');
       }
     };
 
@@ -161,7 +162,6 @@ export default defineComponent({
       password,
       shippingAddress,
       acceptTerms,
-      error,
       register,
     };
   },

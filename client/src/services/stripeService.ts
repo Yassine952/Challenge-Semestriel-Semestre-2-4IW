@@ -1,10 +1,16 @@
 import axios from 'axios';
 
-export const createCheckoutSession = async (cartItems: any) => {
+export const createCheckoutSession = async (checkoutData: any) => {
   const token = localStorage.getItem('token');
+  
+  // Support pour l'ancien format (rétrocompatibilité)
+  const requestData = Array.isArray(checkoutData) 
+    ? { cartItems: checkoutData }
+    : checkoutData;
+  
   const response = await axios.post(
     `${import.meta.env.VITE_API_URL}/stripe/create-checkout-session`,
-    { cartItems },
+    requestData,
     {
       headers: {
         'Content-Type': 'application/json',

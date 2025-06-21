@@ -77,13 +77,30 @@ export const createUser = async (req, res) => {
 };
 
 export const updateUser = async (req, res) => {
-  console.log('updateUser called');
+  console.log('updateUser called with params:', req.params.id);
+  console.log('updateUser called with body:', req.body);
+  
+  // Vérifier les erreurs de validation
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log('Validation errors:', errors.array());
+    return res.status(400).json({ 
+      message: 'Erreurs de validation',
+      errors: errors.array() 
+    });
+  }
+
   const { firstName, lastName, email, password, shippingAddress, role } = req.body;
   try {
     const updatedUser = await User.findByPk(req.params.id);
-    if (!updatedUser) return res.status(404).json({ message: 'User not found' });
+    if (!updatedUser) {
+      console.log('User not found for ID:', req.params.id);
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-    if (password) {
+    console.log('Updating user with password:', !!password);
+
+    if (password && password.trim() !== '') {
       const hashedPassword = await bcrypt.hash(password, 12);
       await updatedUser.update({ firstName, lastName, email, password: hashedPassword, shippingAddress, role });
 
@@ -111,10 +128,11 @@ export const updateUser = async (req, res) => {
       }
     }
 
+    console.log('User updated successfully');
     res.status(200).json(updatedUser);
   } catch (error) {
     console.error('Error updating user:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -130,6 +148,22 @@ export const deleteUser = async (req, res) => {
     res.status(200).json({ message: 'User deleted' });
   } catch (error) {
     console.error('Error deleting user:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getNewsletterSubscribersCount = async (req, res) => {
+  try {
+    const count = await User.count({
+      where: { 
+        role: 'ROLE_USER',
+        alertNewsletter: true
+      }
+    });
+
+    res.status(200).json({ count });
+  } catch (error) {
+    console.error('Error counting newsletter subscribers:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

@@ -90,7 +90,7 @@
                   <p class="text-sm text-gray-600">{{ alert.Product.category }}</p>
                 </div>
                 <div class="text-right">
-                  <span class="font-bold text-blue-600">{{ alert.Product.price }}€</span>
+                  <span class="font-bold text-blue-600">{{ (alert.Product.price / 100).toFixed(2) }}€</span>
                 </div>
               </div>
             </div>

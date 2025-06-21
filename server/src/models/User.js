@@ -42,6 +42,28 @@ const User = sequelize.define('User', {
     allowNull: false,
     defaultValue: 'ROLE_USER',
   },
+  // Préférences d'alertes email
+  alertNewProducts: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+  },
+  alertRestock: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+  },
+  alertPriceChanges: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+  },
+  alertNewsletter: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+  },
+  // Catégories d'intérêt pour les alertes (JSON array)
+  alertCategories: {
+    type: DataTypes.JSON,
+    defaultValue: [],
+  },
 });
 
 export default User;

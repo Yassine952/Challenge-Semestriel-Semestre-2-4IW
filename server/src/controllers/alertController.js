@@ -3,7 +3,11 @@ import Product from '../models/Product.js';
 import User from '../models/User.js';
 import AlertHistory from '../models/AlertHistory.js';
 import { Op } from 'sequelize';
+import ProductMongo from '../models/ProductMongo.js';
+import ConfigService from '../services/configService.js';
+import mongoose from 'mongoose';
 
+// Configuration du transporteur email
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: process.env.SMTP_PORT || 587,
@@ -14,8 +18,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const LOW_STOCK_THRESHOLD = 10;
-
+// Fonction utilitaire pour enregistrer l'historique des alertes
 const saveAlertHistory = async (userId, productId, alertType, title, message, metadata = null) => {
   try {
     await AlertHistory.create({
@@ -32,9 +35,10 @@ const saveAlertHistory = async (userId, productId, alertType, title, message, me
   }
 };
 
+// Envoyer une alerte de nouveau produit
 export const sendNewProductAlert = async (product) => {
   try {
-
+    // Récupérer tous les utilisateurs qui souhaitent recevoir des alertes de nouveaux produits
     const users = await User.findAll({
       where: { 
         role: 'ROLE_USER',
@@ -45,14 +49,15 @@ export const sendNewProductAlert = async (product) => {
     console.log(`Utilisateurs trouvés: ${users.length}`);
     users.forEach(u => console.log(`- ${u.email}, categories: ${JSON.stringify(u.alertCategories)}`));
 
+    // Filtrer par catégorie si l'utilisateur a des préférences spécifiques
     const filteredUsers = users.filter(user => {
-
+      // Vérifier si alertCategories est null, undefined, ou tableau vide
       const categories = user.alertCategories;
       console.log(`User ${user.email}: categories=${JSON.stringify(categories)}, product.category=${product.category}`);
       
       if (!categories || !Array.isArray(categories) || categories.length === 0) {
         console.log(`  -> Accepté (pas de préférence)`);
-        return true;
+        return true; // Pas de préférence = toutes les catégories
       }
       
       const accepted = categories.includes(product.category);
@@ -75,7 +80,7 @@ export const sendNewProductAlert = async (product) => {
               <p style="color: #6b7280;">${product.description}</p>
               <div style="margin: 15px 0;">
                 <span style="background: #3b82f6; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold;">
-                  ${product.price}€
+                  ${(product.price / 100).toFixed(2)}€
                 </span>
                 <span style="margin-left: 10px; color: #059669;">
                   Stock: ${product.stock} disponibles
@@ -109,7 +114,8 @@ export const sendNewProductAlert = async (product) => {
     });
 
     await Promise.all(emailPromises);
-
+    
+    // Enregistrer l'historique pour chaque utilisateur
     const historyPromises = filteredUsers.map(user => 
       saveAlertHistory(
         user.id, 
@@ -128,9 +134,10 @@ export const sendNewProductAlert = async (product) => {
   }
 };
 
+// Envoyer une alerte de stock faible
 export const sendLowStockAlert = async (product) => {
   try {
-
+    // Récupérer les administrateurs et gestionnaires de stock
     const admins = await User.findAll({
       where: { 
         role: ['ROLE_ADMIN', 'ROLE_STORE_KEEPER'] 
@@ -153,7 +160,7 @@ export const sendLowStockAlert = async (product) => {
                   Stock restant: ${product.stock}
                 </span>
                 <span style="margin-left: 10px; color: #374151;">
-                  Prix: ${product.price}€
+                  Prix: ${(product.price / 100).toFixed(2)}€
                 </span>
               </div>
               <div style="margin: 15px 0;">
@@ -185,29 +192,33 @@ export const sendLowStockAlert = async (product) => {
   }
 };
 
+// Vérifier les stocks faibles (à exécuter périodiquement)
 export const checkLowStock = async (req, res) => {
   try {
+    // Récupérer le seuil depuis la base de données ou utiliser la valeur par défaut
+    const threshold = req.query.threshold ? 
+      parseInt(req.query.threshold) : 
+      await ConfigService.get('low_stock_threshold', 10);
 
-    const threshold = req.query.threshold ? parseInt(req.query.threshold) : LOW_STOCK_THRESHOLD;
-    
-    const lowStockProducts = await Product.findAll({
-      where: {
-        stock: {
-          [Op.lte]: threshold
-        }
-      }
+    console.log(`🔍 Vérification des stocks faibles avec seuil: ${threshold}`);
+
+    // 🔧 CORRECTION: Utiliser MongoDB pour récupérer les produits (selon cahier des charges)
+    const lowStockProducts = await ProductMongo.find({
+      stock: { $lte: threshold }
     });
 
+    // Envoyer une alerte pour chaque produit en stock faible
     const alertPromises = lowStockProducts.map(product => sendLowStockAlert(product));
     await Promise.all(alertPromises);
 
     res.json({
       message: `Vérification terminée. ${lowStockProducts.length} produits en stock faible.`,
       lowStockProducts: lowStockProducts.map(p => ({
-        id: p.id,
+        id: p.productId,
         name: p.name,
         stock: p.stock
-      }))
+      })),
+      threshold
     });
   } catch (error) {
     console.error('Erreur lors de la vérification des stocks:', error);
@@ -215,9 +226,10 @@ export const checkLowStock = async (req, res) => {
   }
 };
 
+// Envoyer une alerte de changement de prix
 export const sendPriceChangeAlert = async (product, oldPrice, newPrice) => {
   try {
-
+    // Récupérer les utilisateurs intéressés par les changements de prix
     const users = await User.findAll({
       where: { 
         role: 'ROLE_USER',
@@ -225,9 +237,10 @@ export const sendPriceChangeAlert = async (product, oldPrice, newPrice) => {
       }
     });
 
+    // Filtrer par catégorie si l'utilisateur a des préférences spécifiques
     const filteredUsers = users.filter(user => {
       if (!user.alertCategories || user.alertCategories.length === 0) {
-        return true;
+        return true; // Pas de préférence = toutes les catégories
       }
       return user.alertCategories.includes(product.category);
     });
@@ -287,7 +300,8 @@ export const sendPriceChangeAlert = async (product, oldPrice, newPrice) => {
     });
 
     await Promise.all(emailPromises);
-
+    
+    // Enregistrer l'historique pour chaque utilisateur
     const historyPromises = filteredUsers.map(user => 
       saveAlertHistory(
         user.id, 
@@ -306,17 +320,64 @@ export const sendPriceChangeAlert = async (product, oldPrice, newPrice) => {
   }
 };
 
+// Envoyer une newsletter avec les nouveaux produits
 export const sendNewsletter = async (req, res) => {
   try {
-    const { productIds } = req.body;
+    const { 
+      productIds, 
+      title = '📧 Newsletter - Nouveaux produits',
+      message = 'Découvrez nos derniers produits :',
+      buttonText = 'Voir tous les produits',
+      backgroundColor = '#3b82f6',
+      textColor = '#ffffff'
+    } = req.body;
     
     if (!productIds || !Array.isArray(productIds)) {
       return res.status(400).json({ error: 'Liste des produits requise' });
     }
 
-    const products = await Product.findAll({
+    if (!title.trim()) {
+      return res.status(400).json({ error: 'Le titre est requis' });
+    }
+
+    console.log('📧 Envoi newsletter avec IDs:', productIds);
+
+    // Essayer d'abord avec les IDs PostgreSQL
+    let products = await Product.findAll({
       where: { id: productIds }
     });
+
+    // Si aucun produit trouvé, essayer avec les productId (pour le cas où les IDs seraient des ObjectId MongoDB)
+    if (products.length === 0) {
+      console.log('❌ Aucun produit trouvé avec les IDs PostgreSQL, tentative avec productId...');
+      
+      // Convertir les IDs MongoDB en productId PostgreSQL
+      const mongoProducts = await ProductMongo.find({
+        _id: { $in: productIds.map(id => {
+          try {
+            return new mongoose.Types.ObjectId(id);
+          } catch (e) {
+            return null;
+          }
+        }).filter(Boolean) }
+      });
+      
+      if (mongoProducts.length > 0) {
+        const postgresIds = mongoProducts.map(p => p.productId);
+        console.log('✅ Produits MongoDB trouvés, recherche PostgreSQL avec productIds:', postgresIds);
+        
+        products = await Product.findAll({
+          where: { id: postgresIds }
+        });
+      }
+    }
+
+    if (products.length === 0) {
+      console.log('❌ Aucun produit trouvé avec les IDs fournis:', productIds);
+      return res.status(400).json({ error: 'Aucun produit trouvé avec ces IDs' });
+    }
+
+    console.log(`✅ ${products.length} produit(s) trouvé(s) pour l'envoi newsletter`);
 
     const users = await User.findAll({
       where: { 
@@ -327,16 +388,23 @@ export const sendNewsletter = async (req, res) => {
 
     const emailPromises = users.map(user => {
       const productsHtml = products.map(product => `
-        <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin: 10px 0;">
-          <h4 style="color: #1f2937; margin: 0 0 10px 0;">${product.name}</h4>
-          <p style="color: #6b7280; margin: 0 0 10px 0;">${product.description}</p>
-          <div>
-            <span style="background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">
-              ${product.price}€
+        <div style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin: 15px 0; background: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+            <h3 style="color: #1f2937; margin: 0; font-size: 18px; font-weight: 600;">${product.name}</h3>
+            <span style="background: ${backgroundColor}; color: ${textColor}; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 16px; white-space: nowrap; margin-left: 15px;">
+              ${(product.price / 100).toFixed(2)}€
             </span>
-            <span style="margin-left: 10px; color: #059669; font-size: 14px;">
-              ${product.stock} en stock
-            </span>
+          </div>
+          <p style="color: #6b7280; margin: 0 0 15px 0; line-height: 1.5;">${product.description}</p>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center;">
+              <span style="background: #f3f4f6; color: #374151; padding: 4px 10px; border-radius: 15px; font-size: 12px; text-transform: uppercase; font-weight: 500;">
+                ${product.category}
+              </span>
+            </div>
+            <div style="color: #059669; font-size: 14px; font-weight: 500;">
+              📦 ${product.stock} disponible${product.stock > 1 ? 's' : ''}
+            </div>
           </div>
         </div>
       `).join('');
@@ -344,25 +412,44 @@ export const sendNewsletter = async (req, res) => {
       const mailOptions = {
         from: process.env.EMAIL_USER,
         to: user.email,
-        subject: '📧 Newsletter - Nouveaux produits',
+        subject: title,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #3b82f6;">📧 Newsletter - Nouveaux produits</h2>
-            <p style="color: #6b7280;">Découvrez nos derniers produits :</p>
-            ${productsHtml}
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}" 
-                 style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                Voir tous les produits
-              </a>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <!-- Header avec couleur personnalisable -->
+            <div style="background: ${backgroundColor}; padding: 30px 20px; text-align: center;">
+              <h1 style="color: ${textColor}; margin: 0; font-size: 24px; font-weight: bold;">${title}</h1>
             </div>
-            <p style="color: #9ca3af; font-size: 12px; text-align: center;">
-              Vous recevez cet email car vous êtes inscrit à notre newsletter.
-              <br>
-              <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/profile" style="color: #9ca3af;">
-                Gérer mes préférences d'alertes
-              </a>
-            </p>
+            
+            <!-- Contenu principal -->
+            <div style="padding: 30px 20px;">
+              <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">${message}</p>
+              
+              <!-- Produits -->
+              <div style="margin: 25px 0;">
+                ${productsHtml}
+              </div>
+              
+              <!-- Bouton d'action -->
+              <div style="text-align: center; margin: 35px 0;">
+                <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}" 
+                   style="background: ${backgroundColor}; color: ${textColor}; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);">
+                  ${buttonText}
+                </a>
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                Vous recevez cet email car vous êtes inscrit à notre newsletter.
+              </p>
+              <p style="margin: 8px 0 0 0;">
+                <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/profile" 
+                   style="color: #6b7280; font-size: 12px; text-decoration: underline;">
+                  Gérer mes préférences d'alertes
+                </a>
+              </p>
+            </div>
           </div>
         `
       };
@@ -372,21 +459,35 @@ export const sendNewsletter = async (req, res) => {
 
     await Promise.all(emailPromises);
 
+    // Enregistrer l'historique pour chaque utilisateur
     const historyPromises = users.map(user => 
       saveAlertHistory(
         user.id, 
-        null,
+        null, // Pas de produit spécifique pour la newsletter
         'newsletter', 
-        '📧 Newsletter - Nouveaux produits',
-        `Newsletter contenant ${products.length} produit(s).`,
-        { productsCount: products.length, productNames: products.map(p => p.name) }
+        title,
+        `Newsletter personnalisée contenant ${products.length} produit(s).`,
+        { 
+          productsCount: products.length, 
+          productNames: products.map(p => p.name),
+          customTitle: title,
+          customMessage: message,
+          backgroundColor,
+          textColor
+        }
       )
     );
     await Promise.all(historyPromises);
 
     res.json({
       message: `Newsletter envoyée à ${users.length} utilisateurs`,
-      productsCount: products.length
+      productsCount: products.length,
+      title: title,
+      customization: {
+        backgroundColor,
+        textColor,
+        buttonText
+      }
     });
   } catch (error) {
     console.error('Erreur lors de l\'envoi de la newsletter:', error);
@@ -394,9 +495,10 @@ export const sendNewsletter = async (req, res) => {
   }
 };
 
+// Envoyer alerte de restock (produit de nouveau disponible)
 export const sendRestockAlert = async (product) => {
   try {
-
+    // Récupérer les utilisateurs intéressés par les alertes de restock
     const users = await User.findAll({
       where: { 
         role: 'ROLE_USER',
@@ -404,9 +506,10 @@ export const sendRestockAlert = async (product) => {
       }
     });
 
+    // Filtrer par catégorie si l'utilisateur a des préférences spécifiques
     const filteredUsers = users.filter(user => {
       if (!user.alertCategories || user.alertCategories.length === 0) {
-        return true;
+        return true; // Pas de préférence = toutes les catégories
       }
       return user.alertCategories.includes(product.category);
     });
@@ -424,7 +527,7 @@ export const sendRestockAlert = async (product) => {
               <p style="color: #047857;">Ce produit a été réapprovisionné et est de nouveau disponible !</p>
               <div style="margin: 15px 0;">
                 <span style="background: #059669; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold;">
-                  ${product.price}€
+                  ${(product.price / 100).toFixed(2)}€
                 </span>
                 <span style="margin-left: 10px; color: #047857;">
                   ✅ En stock
@@ -450,7 +553,8 @@ export const sendRestockAlert = async (product) => {
     });
 
     await Promise.all(emailPromises);
-
+    
+    // Enregistrer l'historique pour chaque utilisateur
     const historyPromises = filteredUsers.map(user => 
       saveAlertHistory(
         user.id, 
@@ -469,4 +573,255 @@ export const sendRestockAlert = async (product) => {
   }
 };
 
-export { LOW_STOCK_THRESHOLD }; 
+// ✅ NOUVELLES FONCTIONS DE CONFIGURATION
+// Mettre à jour le seuil de stock faible
+export const updateStockThreshold = async (req, res) => {
+  try {
+    const { threshold } = req.body;
+    
+    if (!threshold || threshold < 1) {
+      return res.status(400).json({ error: 'Seuil invalide (doit être >= 1)' });
+    }
+    
+    const success = await ConfigService.set(
+      'low_stock_threshold', 
+      parseInt(threshold), 
+      'number', 
+      'Seuil de stock critique en dessous duquel une alerte est envoyée'
+    );
+    
+    if (!success) {
+      return res.status(500).json({ error: 'Erreur lors de la sauvegarde du seuil' });
+    }
+    
+    console.log(`✅ Seuil de stock faible mis à jour: ${threshold}`);
+    
+    res.json({ 
+      message: `Seuil de stock faible mis à jour: ${threshold}`,
+      threshold: parseInt(threshold)
+    });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du seuil:', error);
+    res.status(500).json({ error: 'Erreur lors de la mise à jour du seuil' });
+  }
+};
+
+// Récupérer le seuil actuel
+export const getStockThreshold = async (req, res) => {
+  try {
+    const threshold = await ConfigService.get('low_stock_threshold', 10);
+    res.json({ threshold });
+  } catch (error) {
+    console.error('Erreur lors de la récupération du seuil:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération du seuil' });
+  }
+};
+
+// Prévisualiser une newsletter avant envoi
+export const previewNewsletter = async (req, res) => {
+  try {
+    const { 
+      productIds, 
+      title = '📧 Newsletter - Nouveaux produits',
+      message = 'Découvrez nos derniers produits :',
+      buttonText = 'Voir tous les produits',
+      backgroundColor = '#3b82f6',
+      textColor = '#ffffff'
+    } = req.body;
+    
+    if (!productIds || !Array.isArray(productIds)) {
+      return res.status(400).json({ error: 'Liste des produits requise' });
+    }
+
+    console.log('🔍 Recherche produits pour newsletter avec IDs:', productIds);
+
+    // Essayer d'abord avec les IDs PostgreSQL
+    let products = await Product.findAll({
+      where: { id: productIds }
+    });
+
+    // Si aucun produit trouvé, essayer avec les productId (pour le cas où les IDs seraient des ObjectId MongoDB)
+    if (products.length === 0) {
+      console.log('❌ Aucun produit trouvé avec les IDs PostgreSQL, tentative avec productId...');
+      
+      // Convertir les IDs MongoDB en productId PostgreSQL
+      const mongoProducts = await ProductMongo.find({
+        _id: { $in: productIds.map(id => {
+          try {
+            return new mongoose.Types.ObjectId(id);
+          } catch (e) {
+            return null;
+          }
+        }).filter(Boolean) }
+      });
+      
+      if (mongoProducts.length > 0) {
+        const postgresIds = mongoProducts.map(p => p.productId);
+        console.log('✅ Produits MongoDB trouvés, recherche PostgreSQL avec productIds:', postgresIds);
+        
+        products = await Product.findAll({
+          where: { id: postgresIds }
+        });
+      }
+    }
+
+    if (products.length === 0) {
+      console.log('❌ Aucun produit trouvé avec les IDs fournis:', productIds);
+      return res.status(404).json({ error: 'Aucun produit trouvé avec ces IDs' });
+    }
+
+    console.log(`✅ ${products.length} produit(s) trouvé(s) pour la newsletter`);
+
+    // Compter les utilisateurs qui recevraient la newsletter
+    const userCount = await User.count({
+      where: { 
+        role: 'ROLE_USER',
+        alertNewsletter: true
+      }
+    });
+
+    // Générer le HTML de prévisualisation
+    const productsHtml = products.map(product => `
+      <div style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin: 15px 0; background: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+          <h3 style="color: #1f2937; margin: 0; font-size: 18px; font-weight: 600;">${product.name}</h3>
+          <span style="background: ${backgroundColor}; color: ${textColor}; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 16px;">
+            ${(product.price / 100).toFixed(2)}€
+          </span>
+        </div>
+        <p style="color: #6b7280; margin: 0 0 15px 0; line-height: 1.5;">${product.description}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="background: #f3f4f6; color: #374151; padding: 4px 10px; border-radius: 15px; font-size: 12px; text-transform: uppercase; font-weight: 500;">
+            ${product.category}
+          </span>
+          <div style="color: #059669; font-size: 14px; font-weight: 500;">
+            📦 ${product.stock} disponible${product.stock > 1 ? 's' : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    const previewHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div style="background: ${backgroundColor}; padding: 30px 20px; text-align: center;">
+          <h1 style="color: ${textColor}; margin: 0; font-size: 24px; font-weight: bold;">${title}</h1>
+        </div>
+        
+        <div style="padding: 30px 20px;">
+          <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">${message}</p>
+          
+          <div style="margin: 25px 0;">
+            ${productsHtml}
+          </div>
+          
+          <div style="text-align: center; margin: 35px 0;">
+            <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}" 
+               style="background: ${backgroundColor}; color: ${textColor}; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);">
+              ${buttonText}
+            </a>
+          </div>
+        </div>
+        
+        <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+          <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+            Vous recevez cet email car vous êtes inscrit à notre newsletter.
+          </p>
+          <p style="margin: 8px 0 0 0;">
+            <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/profile" 
+               style="color: #6b7280; font-size: 12px; text-decoration: underline;">
+              Gérer mes préférences d'alertes
+            </a>
+          </p>
+        </div>
+      </div>
+    `;
+
+    res.json({
+      previewHtml,
+      recipientCount: userCount,
+      productsCount: products.length,
+      products: products.map(p => ({
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        category: p.category,
+        stock: p.stock
+      })),
+      settings: {
+        title,
+        message,
+        buttonText,
+        backgroundColor,
+        textColor
+      }
+    });
+  } catch (error) {
+    console.error('Erreur lors de la prévisualisation de la newsletter:', error);
+    res.status(500).json({ error: 'Erreur lors de la prévisualisation de la newsletter' });
+  }
+};
+
+// ✅ FONCTION AMÉLIORÉE - Vérifier automatiquement un produit spécifique
+export const checkProductStockThreshold = async (product, oldStock = null) => {
+  try {
+    const currentStock = product.stock;
+    const threshold = await ConfigService.get('low_stock_threshold', 10);
+    
+    // Si le stock actuel est <= au seuil ET différent de l'ancien stock
+    if (currentStock <= threshold && currentStock > 0) {
+      // Si on a un ancien stock, vérifier qu'on vient de passer sous le seuil
+      if (oldStock === null || oldStock > threshold) {
+        console.log(`🚨 ALERTE: Produit ${product.name} (ID: ${product.id}) - Stock: ${currentStock} <= Seuil: ${threshold}`);
+        
+        // Envoyer l'alerte
+        await sendLowStockAlert(product);
+        
+        return true; // Alerte envoyée
+      }
+    }
+    
+    return false; // Pas d'alerte nécessaire
+  } catch (error) {
+    console.error('Erreur lors de la vérification du seuil de stock:', error);
+    return false;
+  }
+};
+
+// ✅ FONCTION DE TEST - Tester l'alerte de stock faible pour un produit spécifique
+export const testLowStockAlert = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    
+    if (!productId) {
+      return res.status(400).json({ error: 'ID du produit requis' });
+    }
+
+    // Import dynamique pour éviter les dépendances circulaires
+    const { default: Product } = await import('../models/Product.js');
+    
+    const product = await Product.findByPk(productId);
+    if (!product) {
+      return res.status(404).json({ error: 'Produit non trouvé' });
+    }
+
+    const threshold = await ConfigService.get('low_stock_threshold', 10);
+
+    console.log(`🧪 TEST: Envoi alerte stock faible pour ${product.name} (stock: ${product.stock})`);
+    
+    // Forcer l'envoi de l'alerte (même si le stock n'est pas forcément faible)
+    await sendLowStockAlert(product);
+    
+    res.json({
+      message: `Alerte de stock faible envoyée pour le produit "${product.name}"`,
+      product: {
+        id: product.id,
+        name: product.name,
+        stock: product.stock,
+        threshold
+      }
+    });
+  } catch (error) {
+    console.error('Erreur lors du test d\'alerte:', error);
+    res.status(500).json({ error: 'Erreur lors du test d\'alerte' });
+  }
+}; 

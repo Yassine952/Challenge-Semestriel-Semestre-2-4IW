@@ -13,6 +13,8 @@
     "@stripe/stripe-js": "^4.1.0",
     "@vue-stripe/vue-stripe": "^4.5.0",
     "axios": "^1.7.2",
+    "chart.js": "^4.5.0",
+    "chartjs-plugin-zoom": "^2.2.0",
     "jwt-decode": "^4.0.0",
     "reusify": "^1.0.4",
     "vue": "^3.3.11",

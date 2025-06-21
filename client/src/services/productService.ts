@@ -38,6 +38,8 @@ export const fetchCategories = async (): Promise<string[]> => {
   return response.data;
 };
 
+// Fonction supprimée - recherche par marque désactivée
+
 export const createProduct = async (product: Product): Promise<Product> => {
   const response = await apiClient.post('/', product);
   return response.data;
@@ -54,5 +56,6 @@ export const deleteProduct = async (id: number): Promise<void> => {
 
 export const searchProducts = async (query: any): Promise<Product[]> => {
   const response = await axios.get(`${API_URL}/search`, { params: query });
-  return response.data;
+  // L'API retourne soit un tableau direct, soit un objet avec products
+  return response.data.products || response.data;
 };

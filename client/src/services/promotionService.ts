@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { Promotion, PromoValidationResult } from '../types/Promotion';
 
-const API_URL = `${import.meta.env.VITE_API_URL}/promotions`;
+const API_URL = `${import.meta.env.VITE_API_URL}/promotions`;
+
+// Créer une promotion
 export const createPromotion = async (promotion: Omit<Promotion, 'promotionId' | 'usageCount' | 'createdAt' | 'updatedAt'>): Promise<Promotion> => {
   const token = localStorage.getItem('token');
   const response = await axios.post(API_URL, promotion, {
@@ -11,7 +13,9 @@ export const createPromotion = async (promotion: Omit<Promotion, 'promotionId' |
     }
   });
   return response.data.promotion;
-};
+};
+
+// Récupérer toutes les promotions
 export const fetchPromotions = async (filters?: { active?: boolean; expired?: boolean }): Promise<Promotion[]> => {
   const token = localStorage.getItem('token');
   const params = new URLSearchParams();
@@ -25,7 +29,9 @@ export const fetchPromotions = async (filters?: { active?: boolean; expired?: bo
     }
   });
   return response.data;
-};
+};
+
+// Récupérer une promotion par ID
 export const fetchPromotionById = async (id: number): Promise<Promotion> => {
   const token = localStorage.getItem('token');
   const response = await axios.get(`${API_URL}/${id}`, {
@@ -34,7 +40,9 @@ export const fetchPromotionById = async (id: number): Promise<Promotion> => {
     }
   });
   return response.data;
-};
+};
+
+// Mettre à jour une promotion
 export const updatePromotion = async (id: number, promotion: Partial<Promotion>): Promise<Promotion> => {
   const token = localStorage.getItem('token');
   const response = await axios.put(`${API_URL}/${id}`, promotion, {
@@ -44,7 +52,9 @@ export const updatePromotion = async (id: number, promotion: Partial<Promotion>)
     }
   });
   return response.data;
-};
+};
+
+// Supprimer une promotion
 export const deletePromotion = async (id: number): Promise<void> => {
   const token = localStorage.getItem('token');
   await axios.delete(`${API_URL}/${id}`, {
@@ -52,7 +62,9 @@ export const deletePromotion = async (id: number): Promise<void> => {
       'Authorization': `Bearer ${token}`
     }
   });
-};
+};
+
+// Valider un code promo (public)
 export const validatePromoCode = async (
   code: string, 
   cartTotal: number, 
@@ -64,7 +76,9 @@ export const validatePromoCode = async (
     cartItems
   });
   return response.data;
-};
+};
+
+// Appliquer un code promo
 export const applyPromoCode = async (code: string): Promise<void> => {
   const token = localStorage.getItem('token');
   await axios.post(`${API_URL}/apply`, { code }, {
@@ -73,7 +87,9 @@ export const applyPromoCode = async (code: string): Promise<void> => {
       'Content-Type': 'application/json'
     }
   });
-};
+};
+
+// Récupérer les promotions actives pour un produit
 export const fetchActivePromotionsForProduct = async (productId?: number, category?: string): Promise<Promotion[]> => {
   const params = new URLSearchParams();
   if (productId) params.append('productId', productId.toString());

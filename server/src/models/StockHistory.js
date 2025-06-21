@@ -14,7 +14,7 @@ const StockHistory = sequelize.define('StockHistory', {
   },
   userId: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: true, // Peut être null pour les mouvements automatiques
     references: {
       model: User,
       key: 'id'
@@ -22,54 +22,63 @@ const StockHistory = sequelize.define('StockHistory', {
   },
   movementType: {
     type: DataTypes.ENUM(
-      'purchase',
-      'sale',
-      'adjustment',
-      'return',
-      'reservation',
-      'release',
-      'damage',
-      'theft',
-      'transfer',
-      'initial'
+      'purchase',        // Achat/Réapprovisionnement
+      'sale',           // Vente
+      'adjustment',     // Ajustement manuel
+      'return',         // Retour de commande
+      'reservation',    // Réservation panier
+      'release',        // Libération réservation
+      'damage',         // Produit endommagé
+      'theft',          // Vol/Perte
+      'transfer',       // Transfert
+      'initial'         // Stock initial
     ),
     allowNull: false
   },
   quantityBefore: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    comment: 'Stock avant le mouvement'
   },
   quantityChange: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    comment: 'Changement de quantité (positif = ajout, négatif = retrait)'
   },
   quantityAfter: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    comment: 'Stock après le mouvement'
   },
   reason: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: true,
+    comment: 'Raison du mouvement'
   },
   reference: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: true,
+    comment: 'Référence externe (numéro de commande, bon de livraison, etc.)'
   },
   cost: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: true
+    allowNull: true,
+    comment: 'Coût unitaire lors du mouvement'
   },
   totalValue: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: true
+    allowNull: true,
+    comment: 'Valeur totale du mouvement'
   },
   notes: {
     type: DataTypes.TEXT,
-    allowNull: true
+    allowNull: true,
+    comment: 'Notes additionnelles'
   },
   metadata: {
     type: DataTypes.JSON,
-    allowNull: true
+    allowNull: true,
+    comment: 'Données supplémentaires (orderId, cartId, etc.)'
   }
 }, {
   timestamps: true,
@@ -86,6 +95,7 @@ const StockHistory = sequelize.define('StockHistory', {
   ]
 });
 
+// Relations
 Product.hasMany(StockHistory, { foreignKey: 'productId' });
 StockHistory.belongsTo(Product, { foreignKey: 'productId' });
 

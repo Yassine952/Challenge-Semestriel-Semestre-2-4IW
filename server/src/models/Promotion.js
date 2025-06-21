@@ -29,7 +29,7 @@ const Promotion = sequelize.define('Promotion', {
   },
   maxDiscountAmount: {
     type: DataTypes.FLOAT,
-    allowNull: true
+    allowNull: true // null = pas de limite
   },
   startDate: {
     type: DataTypes.DATE,
@@ -41,7 +41,7 @@ const Promotion = sequelize.define('Promotion', {
   },
   usageLimit: {
     type: DataTypes.INTEGER,
-    allowNull: true
+    allowNull: true // null = illimité
   },
   usageCount: {
     type: DataTypes.INTEGER,
@@ -53,11 +53,11 @@ const Promotion = sequelize.define('Promotion', {
     defaultValue: 'all'
   },
   applicableCategories: {
-    type: DataTypes.JSON,
+    type: DataTypes.JSON, // Array de catégories
     allowNull: true
   },
   applicableProductIds: {
-    type: DataTypes.JSON,
+    type: DataTypes.JSON, // Array d'IDs de produits
     allowNull: true
   },
   isActive: {

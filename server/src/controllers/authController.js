@@ -189,12 +189,30 @@ export const forgotPassword = async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const resetUrl = `${process.env.BASE_URL}/reset-password/${token}`;
+    // URL corrigée pour pointer vers le frontend
+    const resetUrl = `http://localhost:5173/reset-password/${token}`;
 
     await transporter.sendMail({
       to: email,
       subject: 'Demande de réinitialisation de mot de passe',
-      html: `Cliquez <a href="${resetUrl}">ici</a> pour réinitialiser votre mot de passe.`
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #3B82F6;">Réinitialisation de votre mot de passe</h2>
+          <p>Bonjour,</p>
+          <p>Vous avez demandé à réinitialiser votre mot de passe pour votre compte Le Monde des Mugs.</p>
+          <p>Cliquez sur le bouton ci-dessous pour réinitialiser votre mot de passe :</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" 
+               style="background-color: #3B82F6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
+              Réinitialiser mon mot de passe
+            </a>
+          </div>
+          <p><strong>Ce lien expirera dans 1 heure.</strong></p>
+          <p>Si vous n'avez pas demandé cette réinitialisation, ignorez simplement cet email.</p>
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+          <p style="color: #6b7280; font-size: 14px;">Le Monde des Mugs</p>
+        </div>
+      `
     });
 
     passwordResetCache.set(email, true);

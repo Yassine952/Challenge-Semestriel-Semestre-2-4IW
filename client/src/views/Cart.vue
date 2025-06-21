@@ -1,103 +1,235 @@
 <template>
-  <section class="py-24 relative">
-    <div v-if="cart && cart.CartItems.length > 0">
-      <div class="w-full max-w-7xl px-4 md:px-5 lg-6 mx-auto">
-        <h2 class="title font-manrope font-bold text-4xl leading-10 mb-8 text-center text-black">Panier</h2>
-        <div class="hidden lg:grid grid-cols-2 py-6">
-          <div class="font-normal text-xl leading-8 text-gray-500">Produit</div>
-          <p class="font-normal text-xl leading-8 text-gray-500 flex items-center justify-between">
-            <span class="w-full max-w-[200px] text-center">Prix</span>
-            <span class="w-full max-w-[260px] text-center">Quantité</span>
-            <span class="w-full max-w-[200px] text-center">Total</span>
-          </p>
-        </div>
-
-        <div v-for="product in cart.CartItems" :key="product.id" class="grid grid-cols-1 lg:grid-cols-2 min-[550px]:gap-6 border-t border-gray-200 py-6">
-          <div class="flex items-center flex-col min-[550px]:flex-row gap-3 min-[550px]:gap-6 w-full max-xl:justify-center max-xl:max-w-xl max-xl:mx-auto">
-
-            <div class="pro-data w-full max-w-sm">
-              <h5 class="font-semibold text-xl leading-8 text-black max-[550px]:text-center">{{ product.Product.name }}</h5>
-              <p class="font-normal text-lg leading-8 text-gray-500 my-2 min-[550px]:my-3 max-[550px]:text-center">{{ product.Product.category }}</p>
-              <h6 class="font-medium text-lg leading-8 text-indigo-600 max-[550px]:text-center"></h6>
-            </div>
-          </div>
-          <div class="flex items-center flex-col min-[550px]:flex-row w-full max-xl:max-w-xl max-xl:mx-auto gap-2">
-            <h6 class="font-manrope font-bold text-2xl leading-9 text-black w-full max-w-[176px] text-center">{{ product.price / product.quantity }}  €<span class="text-sm text-gray-300 ml-3 lg:hidden whitespace-nowrap">(Delivery Charge)</span></h6>
-            <div class="flex items-center w-full mx-auto justify-center">
-              <input type="text" class="border-y border-gray-200 outline-none text-gray-900 font-semibold text-lg w-full max-w-[118px] min-w-[80px] placeholder:text-gray-900 py-[15px] text-center bg-transparent" :value="product.quantity" readonly>
-            </div>
-            <h6 class="text-indigo-600 font-manrope font-bold text-2xl leading-9 w-full max-w-[176px] text-center">{{ product.price }} €</h6>
-          </div>
-          <confirm-button
-              :delete-url="`/cart/remove/${product.Product.id}`"
-              :on-success="loadCart"
-              button-text="Retirer"
-            />
-        </div>
-
-          <div class="flex items-center justify-between w-full py-6">
-            <p class="font-manrope font-medium text-2xl leading-9 text-gray-900">Total</p>
-            <h6 class="font-manrope font-medium text-2xl leading-9 text-indigo-500">{{ cart.totalPrice }} €</h6>
-          </div>
-        </div>
-        <div class="flex items-center flex-col sm:flex-row justify-center gap-3 mt-8">
-          
-             <confirm-button
-        :delete-url="'/cart/clear'"
-        :on-success="loadCart"
-        button-text="Vider le panier"
+  <!-- 🛒 Page Panier - Design Aurora Épuré -->
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-24 pb-16">
+    <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12">
       
-        />
-          <button @click="handleCheckout" class="rounded-full w-full max-w-[280px] py-4 text-center justify-center items-center bg-indigo-600 font-semibold text-lg text-white flex transition-all duration-500 hover:bg-indigo-700">
-            Continue to Payment
-            <svg class="ml-2" xmlns="http://www.w3.org/2000/svg" width="23" height="22" viewBox="0 0 23 22" fill="none">
-              <path d="M8.75324 5.49609L14.2535 10.9963L8.75 16.4998" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
-            </svg>
-          </button>
+      <!-- En-tête -->
+      <div class="text-center mb-16">
+        <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h8.5M19 13v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6" />
+          </svg>
+        </div>
+        <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">Mon Panier</h1>
+        <p class="text-lg text-gray-600">Vérifiez vos articles avant de procéder au paiement</p>
+      </div>
+
+      <!-- Contenu du panier -->
+      <div v-if="cart && cart.CartItems.length > 0" class="space-y-12">
+        
+        <!-- Liste des produits -->
+        <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 overflow-hidden">
+          <!-- En-têtes (Desktop) -->
+          <div class="hidden md:grid md:grid-cols-12 gap-6 px-10 py-6 bg-gray-50/80 border-b border-gray-200/50">
+            <div class="col-span-5 text-base font-semibold text-gray-700">Produit</div>
+            <div class="col-span-2 text-base font-semibold text-gray-700 text-center">Prix</div>
+            <div class="col-span-2 text-base font-semibold text-gray-700 text-center">Quantité</div>
+            <div class="col-span-2 text-base font-semibold text-gray-700 text-center">Total</div>
+            <div class="col-span-1 text-base font-semibold text-gray-700 text-center">Action</div>
+          </div>
+
+          <!-- Articles du panier -->
+          <div class="divide-y divide-gray-200/50">
+            <div v-for="product in cart.CartItems" :key="product.id" class="p-8 md:p-10">
+              
+              <!-- Version Mobile -->
+              <div class="md:hidden space-y-6">
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <h3 class="text-xl font-semibold text-gray-900">{{ product.Product.name }}</h3>
+                    <p class="text-base text-gray-500 mt-2">{{ product.Product.category }}</p>
+                  </div>
+                  <confirm-button
+                    :delete-url="`/cart/remove/${product.Product.id}`"
+                    :on-success="loadCart"
+                    button-class="ml-6 inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 transition-all duration-200 hover:scale-110 active:scale-95"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </confirm-button>
+                </div>
+                
+                <div class="flex justify-between items-center bg-gray-50/50 rounded-2xl p-6">
+                  <div class="text-center">
+                    <p class="text-sm text-gray-500 mb-2">Prix unitaire</p>
+                    <p class="text-xl font-semibold text-gray-900">{{ (product.price / product.quantity / 100).toFixed(2) }} €</p>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-sm text-gray-500 mb-2">Quantité</p>
+                    <div class="inline-flex items-center px-4 py-3 bg-white rounded-xl border border-gray-200">
+                      <span class="text-xl font-semibold text-gray-900">{{ product.quantity }}</span>
+                    </div>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-sm text-gray-500 mb-2">Total</p>
+                    <p class="text-xl font-bold text-blue-600">{{ (product.price / 100).toFixed(2) }} €</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Version Desktop -->
+              <div class="hidden md:grid md:grid-cols-12 gap-6 items-center">
+                <div class="col-span-5 flex items-center space-x-6">
+                  <div class="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center">
+                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                  <div class="flex-1">
+                    <h3 class="text-xl font-semibold text-gray-900">{{ product.Product.name }}</h3>
+                    <p class="text-base text-gray-500 mt-1">{{ product.Product.category }}</p>
+                  </div>
+                </div>
+                
+                <div class="col-span-2 text-center">
+                  <p class="text-xl font-semibold text-gray-900">{{ (product.price / product.quantity / 100).toFixed(2) }} €</p>
+                </div>
+                
+                <div class="col-span-2 text-center">
+                  <div class="inline-flex items-center px-6 py-3 bg-gray-50 rounded-2xl border border-gray-200">
+                    <span class="text-xl font-semibold text-gray-900">{{ product.quantity }}</span>
+                  </div>
+                </div>
+                
+                <div class="col-span-2 text-center">
+                  <p class="text-xl font-bold text-blue-600">{{ (product.price / 100).toFixed(2) }} €</p>
+                </div>
+                
+                <div class="col-span-1 text-center">
+                  <confirm-button
+                    :delete-url="`/cart/remove/${product.Product.id}`"
+                    :on-success="loadCart"
+                    button-class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 transition-all duration-200 hover:scale-110 active:scale-95 shadow-sm hover:shadow-md"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </confirm-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Code Promo -->
+        <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-10">
+          <PromoCodeInput 
+            :cart-total="cart.totalPrice"
+            :cart-items="cart.CartItems"
+            @promo-applied="onPromoApplied"
+            @promo-removed="onPromoRemoved"
+          />
+        </div>
+
+        <!-- Résumé et Actions -->
+        <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-10">
+          <!-- Total -->
+          <div class="flex justify-between items-center py-6 border-b border-gray-200/50">
+            <span class="text-2xl font-semibold text-gray-900">Total</span>
+            <span class="text-3xl font-bold text-blue-600">{{ (finalTotal / 100).toFixed(2) }} €</span>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex flex-col sm:flex-row gap-6 mt-10">
+            <confirm-button
+              :delete-url="'/cart/clear'"
+              :on-success="loadCart"
+              button-text="Vider le panier"
+              button-class="flex-1 inline-flex items-center justify-center rounded-2xl px-8 py-4 text-base font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-200 hover:scale-105 active:scale-95"
+            />
+            
+            <button 
+              @click="handleCheckout" 
+              class="flex-1 inline-flex items-center justify-center rounded-2xl px-8 py-5 text-lg font-semibold bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:scale-105 active:scale-95 transition-all duration-200 ease-in-out"
+            >
+              <span>Procéder au paiement</span>
+              <svg class="ml-3 w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
-      <div v-else>
-        <main class="w-full h-screen flex flex-col items-center justify-center px-4">
-          <div class="max-w-lg mx-auto space-y-3 text-center">
-            <h3 class="text-gray-800 text-4xl font-semibold sm:text-5xl">Votre panier est vide</h3>
-            <p class="text-gray-600">Il semble que vous n'ayez pas encore ajouté d'articles à votre panier.</p>
-            <router-link to="/" class="text-indigo-600 duration-150 hover:text-indigo-400 font-medium inline-flex items-center gap-x-1">
-              Retourner à l'accueil
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                <path fill-rule="evenodd" d="M5 10a.75.75 0 01.75-.75h6.638L10.23 7.29a.75.75 0 111.04-1.08l3.5 3.25a.75.75 0 010 1.08l-3.5 3.25a.75.75 0 11-1.04-1.08l2.158-1.96H5.75A.75.75 0 015 10z" clip-rule="evenodd" />
-              </svg>
-            </router-link>
+
+      <!-- Panier vide -->
+      <div v-else class="text-center py-20">
+        <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-16">
+          <div class="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-8">
+            <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h8.5M19 13v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6" />
+            </svg>
           </div>
-        </main>
+          <h3 class="text-3xl font-bold text-gray-900 mb-6">Votre panier est vide</h3>
+          <p class="text-lg text-gray-600 mb-10">Découvrez notre collection de mugs et ajoutez vos favoris !</p>
+          <router-link 
+            to="/" 
+            class="inline-flex items-center justify-center rounded-2xl px-10 py-4 text-lg font-semibold bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:scale-105 active:scale-95 transition-all duration-200 ease-in-out"
+          >
+            <svg class="mr-3 w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            Découvrir nos produits
+          </router-link>
+        </div>
       </div>
-  </section>
+    </div>
+  </main>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
+import { defineComponent, ref, onMounted, computed } from 'vue';
 import { getCart } from '../services/cartService';
 import { createCheckoutSession, clearCartAfterPayment  } from '../services/stripeService';
 import { loadStripe } from '@stripe/stripe-js';
 import ConfirmButton from '../components/ConfirmButton.vue';
+import PromoCodeInput from '../components/PromoCodeInput.vue';
+import { useNotifications } from '../composables/useNotifications';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 export default defineComponent({
   name: 'Cart',
-  components: { ConfirmButton },
+  components: { ConfirmButton, PromoCodeInput },
   setup() {
+    const { addNotification } = useNotifications();
     const cart = ref<any | null>(null);
-    const errorMessage = ref<string | null>(null);
+    const appliedPromo = ref<any | null>(null);
+    const promoDiscount = ref(0);
+
+    const finalTotal = computed(() => {
+      if (!cart.value) return 0;
+      return Math.max(0, cart.value.totalPrice - promoDiscount.value);
+    });
 
     const loadCart = async () => {
       cart.value = await getCart();
+    };
+
+    const onPromoApplied = (promoData: any) => {
+      appliedPromo.value = promoData;
+      // La réduction est déjà en euros, la convertir en centimes pour cohérence avec totalPrice
+      promoDiscount.value = promoData.discount * 100;
+    };
+
+    const onPromoRemoved = () => {
+      appliedPromo.value = null;
+      promoDiscount.value = 0;
     };
 
     const handleCheckout = async () => {
       try {
         const stripe = await stripePromise;
         await loadCart(); 
-        const session = await createCheckoutSession(cart.value.CartItems);
+        
+        // Préparer les données de checkout avec promotion
+        const checkoutData = {
+          cartItems: cart.value.CartItems,
+          appliedPromo: appliedPromo.value,
+          finalTotal: finalTotal.value
+        };
+        
+        const session = await createCheckoutSession(checkoutData);
 
         if (stripe) {
           const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
@@ -107,7 +239,7 @@ export default defineComponent({
           }
         }
       } catch (error: any) {
-        errorMessage.value = error.response?.data?.message || 'Erreur lors de la création de la session de paiement';
+        addNotification(error.response?.data?.message || 'Erreur lors de la création de la session de paiement', 'error');
         loadCart();
       }
     };
@@ -116,13 +248,18 @@ export default defineComponent({
 
     return {
       cart,
-      errorMessage,
+      finalTotal,
+      appliedPromo,
+      promoDiscount,
       handleCheckout,
       loadCart,
+      onPromoApplied,
+      onPromoRemoved,
     };
   },
 });
 </script>
 
 <style scoped>
+/* Ajoutez vos styles ici */
 </style>

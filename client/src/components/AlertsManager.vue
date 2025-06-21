@@ -57,7 +57,7 @@
                 class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <label :for="`product-${product.id}`" class="text-sm text-gray-700">
-                {{ product.name }} - {{ product.price }}€
+                {{ product.name }} - {{ (product.price / 100).toFixed(2) }}€
               </label>
             </div>
           </div>
@@ -86,12 +86,20 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">
               Seuil de stock faible
             </label>
-            <input
-              type="number"
-              v-model="stockThreshold"
-              min="1"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div class="flex space-x-2">
+              <input
+                type="number"
+                v-model="stockThreshold"
+                min="1"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                @click="saveStockThreshold"
+                class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
+              >
+                ✅ Sauvegarder
+              </button>
+            </div>
             <p class="text-xs text-gray-500 mt-1">
               Alertes envoyées quand le stock ≤ cette valeur
             </p>
@@ -123,7 +131,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
+import { defineComponent, ref, onMounted, watch } from 'vue';
 import { fetchProducts } from '../services/productService';
 
 interface Product {
@@ -147,8 +155,9 @@ export default defineComponent({
   setup() {
     const products = ref<Product[]>([]);
     const selectedProducts = ref<number[]>([]);
-    const stockThreshold = ref(10);
-    const smtpConfigured = ref(true);
+    // ✅ Récupérer la valeur depuis localStorage ou utiliser 10 par défaut
+    const stockThreshold = ref(parseInt(localStorage.getItem('stockThreshold') || '10'));
+    const smtpConfigured = ref(true); // À vérifier côté serveur
     
     const isCheckingStock = ref(false);
     const isSendingNewsletter = ref(false);
@@ -168,6 +177,27 @@ export default defineComponent({
         }));
       } catch (error) {
         showMessage('Erreur lors du chargement des produits', 'error');
+      }
+    };
+
+    // ✅ Charger le seuil depuis le serveur
+    const loadStockThreshold = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/alerts/stock-threshold`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          stockThreshold.value = data.threshold;
+          // Synchroniser avec localStorage
+          localStorage.setItem('stockThreshold', data.threshold.toString());
+          console.log(`📊 Seuil de stock récupéré: ${data.threshold}`);
+        }
+      } catch (error) {
+        console.warn('⚠️ Impossible de récupérer le seuil depuis le serveur, utilisation de la valeur locale');
       }
     };
 
@@ -239,7 +269,48 @@ export default defineComponent({
       }, 5000);
     };
 
-    onMounted(loadProducts);
+    // ✅ Sauvegarder le seuil dans localStorage ET sur le serveur
+    const saveStockThreshold = async () => {
+      try {
+        // Sauvegarder sur le serveur
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/alerts/stock-threshold`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ threshold: stockThreshold.value })
+        });
+
+        if (!response.ok) {
+          throw new Error('Erreur lors de la sauvegarde du seuil');
+        }
+
+        const data = await response.json();
+        
+        // Sauvegarder aussi en local
+        localStorage.setItem('stockThreshold', stockThreshold.value.toString());
+        
+        showMessage(`✅ ${data.message}`, 'success');
+      } catch (error: any) {
+        showMessage(`❌ Erreur: ${error.message}`, 'error');
+      }
+    };
+
+    // ✅ Sauvegarder automatiquement quand la valeur change (avec délai)
+    let saveTimeout: NodeJS.Timeout | null = null;
+    watch(stockThreshold, (newValue) => {
+      // Sauvegarder automatiquement dans localStorage (sans message)
+      if (saveTimeout) clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        localStorage.setItem('stockThreshold', newValue.toString());
+      }, 1000); // Attendre 1 seconde après le dernier changement
+    });
+
+    onMounted(() => {
+      loadProducts();
+      loadStockThreshold();
+    });
 
     return {
       products,
@@ -252,7 +323,8 @@ export default defineComponent({
       message,
       messageClass,
       checkLowStock,
-      sendNewsletter
+      sendNewsletter,
+      saveStockThreshold
     };
   }
 });

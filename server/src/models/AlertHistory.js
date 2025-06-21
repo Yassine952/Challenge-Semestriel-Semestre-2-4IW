@@ -14,7 +14,7 @@ const AlertHistory = sequelize.define('AlertHistory', {
   },
   productId: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: true, // Peut être null pour les newsletters
     references: {
       model: Product,
       key: 'id'
@@ -42,12 +42,13 @@ const AlertHistory = sequelize.define('AlertHistory', {
   },
   metadata: {
     type: DataTypes.JSON,
-    allowNull: true
+    allowNull: true // Pour stocker des infos supplémentaires (ancien prix, nouveau prix, etc.)
   }
 }, {
   timestamps: true
 });
 
+// Relations
 User.hasMany(AlertHistory, { foreignKey: 'userId' });
 AlertHistory.belongsTo(User, { foreignKey: 'userId' });
 

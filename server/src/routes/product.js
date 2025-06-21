@@ -4,6 +4,7 @@ import {
   createProduct,
   getProducts,
   getCategories,
+  getBrands,
   getProductById,
   updateProduct,
   deleteProduct
@@ -15,6 +16,7 @@ router.get('/search', searchProducts);
 router.post('/',authenticateToken,authorize(['ROLE_ADMIN', 'ROLE_STORE_KEEPER']), createProduct);
 router.get('/', getProducts);
 router.get('/categories', getCategories);
+router.get('/brands', getBrands);
 router.get('/:id', getProductById);
 router.put('/:id',authenticateToken,authorize(['ROLE_ADMIN', 'ROLE_STORE_KEEPER']), updateProduct);
 router.delete('/:id',authenticateToken, authorize(['ROLE_ADMIN', 'ROLE_STORE_KEEPER']),deleteProduct);

@@ -39,6 +39,28 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: 'ROLE_USER',
   },
+  // Préférences d'alertes email
+  alertNewProducts: {
+    type: Boolean,
+    default: true,
+  },
+  alertRestock: {
+    type: Boolean,
+    default: true,
+  },
+  alertPriceChanges: {
+    type: Boolean,
+    default: true,
+  },
+  alertNewsletter: {
+    type: Boolean,
+    default: true,
+  },
+  // Catégories d'intérêt pour les alertes
+  alertCategories: {
+    type: [String],
+    default: [],
+  },
 });
 
 const UserMongo = mongoose.model('User', userSchema);

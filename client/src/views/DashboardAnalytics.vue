@@ -92,6 +92,7 @@
             :chart-data="ordersChartData"
             :is-loading="loadingStates.ordersChart"
             :error="errorStates.ordersChart"
+            :show-type-selector="false"
             @refresh="loadOrdersChart"
             @close="removeWidget('orders-chart')"
             @period-change="(period) => loadOrdersChart(period)"
@@ -111,6 +112,7 @@
             :chart-data="revenueChartData"
             :is-loading="loadingStates.revenueChart"
             :error="errorStates.revenueChart"
+            :show-type-selector="false"
             @refresh="loadRevenueChart"
             @close="removeWidget('revenue-chart')"
             @period-change="(period) => loadRevenueChart(period)"
@@ -148,6 +150,7 @@
             :chart-data="orderStatusData"
             :is-loading="loadingStates.orderStatus"
             :error="errorStates.orderStatus"
+            :show-type-selector="false"
             :show-period-selector="false"
             @refresh="loadOrderStatus"
             @close="removeWidget('order-status')"
@@ -167,6 +170,7 @@
             :chart-data="topProductsData"
             :is-loading="loadingStates.topProducts"
             :error="errorStates.topProducts"
+            :show-type-selector="false"
             @refresh="loadTopProducts"
             @close="removeWidget('top-products')"
             @period-change="(period) => loadTopProducts(period)"
@@ -186,6 +190,7 @@
             :chart-data="revenueCategoryData"
             :is-loading="loadingStates.revenueCategory"
             :error="errorStates.revenueCategory"
+            :show-type-selector="false"
             @refresh="loadRevenueByCategory"
             @close="removeWidget('revenue-category')"
             @period-change="(period) => loadRevenueByCategory(period)"
@@ -205,6 +210,7 @@
             :chart-data="usersChartData"
             :is-loading="loadingStates.usersChart"
             :error="errorStates.usersChart"
+            :show-type-selector="false"
             @refresh="loadUsersChart"
             @close="removeWidget('users-chart')"
             @period-change="(period) => loadUsersChart(period)"
@@ -250,9 +256,13 @@ export default defineComponent({
     StockEvolutionChart
   },
   setup() {
-    const router = useRouter();
+    const router = useRouter();
+
+    // État global
     const globalPeriod = ref('30d');
-    const isCustomizing = ref(false);
+    const isCustomizing = ref(false);
+
+    // Widgets disponibles
     const availableWidgets: WidgetType[] = [
       { id: 'stats', name: 'Statistiques', icon: '📊', component: 'StatsWidget' },
       { id: 'orders-chart', name: 'Commandes', icon: '📈', component: 'ChartWidget' },
@@ -262,13 +272,17 @@ export default defineComponent({
       { id: 'top-products', name: 'Top produits', icon: '🏆', component: 'ChartWidget' },
       { id: 'revenue-category', name: 'CA par catégorie', icon: '🎯', component: 'ChartWidget' },
       { id: 'users-chart', name: 'Utilisateurs', icon: '👥', component: 'ChartWidget' }
-    ];
+    ];
+
+    // Widgets actifs (sauvegardés dans localStorage)
     const activeWidgets = ref<ActiveWidget[]>([
       { id: 'stats', position: 0 },
       { id: 'orders-chart', position: 1 },
       { id: 'revenue-chart', position: 2 },
       { id: 'order-status', position: 3 }
-    ]);
+    ]);
+
+    // États de chargement et d'erreur
     const loadingStates = reactive({
       stats: false,
       ordersChart: false,
@@ -287,19 +301,25 @@ export default defineComponent({
       topProducts: '',
       revenueCategory: '',
       usersChart: ''
-    });
+    });
+
+    // Données des widgets
     const statsData = ref<Array<{label: string, value: string | number, icon: string, change?: number}>>([]);
     const ordersChartData = ref<ChartData>({ labels: [], datasets: [] });
     const revenueChartData = ref<ChartData>({ labels: [], datasets: [] });
     const orderStatusData = ref<ChartData>({ labels: [], datasets: [] });
     const topProductsData = ref<ChartData>({ labels: [], datasets: [] });
     const revenueCategoryData = ref<ChartData>({ labels: [], datasets: [] });
-    const usersChartData = ref<ChartData>({ labels: [], datasets: [] });
+    const usersChartData = ref<ChartData>({ labels: [], datasets: [] });
+
+    // Computed
     const gridClass = computed(() => {
       return isCustomizing.value 
         ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
         : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
-    });
+    });
+
+    // Méthodes
     const isWidgetActive = (widgetId: string): boolean => {
       return activeWidgets.value.some(w => w.id === widgetId);
     };
@@ -336,8 +356,11 @@ export default defineComponent({
     };
 
     const onDrop = (event: DragEvent) => {
-      event.preventDefault();
-    };
+      event.preventDefault();
+      // Logique de réorganisation des widgets
+    };
+
+    // Chargement des données
     const loadStats = async (period: string = globalPeriod.value) => {
       loadingStates.stats = true;
       errorStates.stats = '';
@@ -464,7 +487,9 @@ export default defineComponent({
       activeWidgets.value.forEach(widget => {
         loadWidgetData(widget.id, globalPeriod.value);
       });
-    };
+    };
+
+    // Vérification des permissions
     onMounted(() => {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -487,21 +512,28 @@ export default defineComponent({
       refreshAllWidgets();
     });
 
-    return {
+    return {
+      // État
       globalPeriod,
       isCustomizing,
       availableWidgets,
       activeWidgets,
       loadingStates,
-      errorStates,
+      errorStates,
+      
+      // Données
       statsData,
       ordersChartData,
       revenueChartData,
       orderStatusData,
       topProductsData,
       revenueCategoryData,
-      usersChartData,
-      gridClass,
+      usersChartData,
+      
+      // Computed
+      gridClass,
+      
+      // Méthodes
       isWidgetActive,
       addWidget,
       removeWidget,

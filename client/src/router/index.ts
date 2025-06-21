@@ -8,12 +8,19 @@ import ProductList from '../views/ProductList.vue';
 import AddProduct from '../views/AddProduct.vue';
 import EditProduct from '../views/EditProduct.vue';
 import AdminDashboard from '../views/AdminDashboard.vue';
+import DashboardAnalytics from '../views/DashboardAnalytics.vue';
 import ProductSearch from '../views/ProductSearch.vue';
 import Cart from '../views/Cart.vue';
 import Profile from '../views/Profile.vue';
+import PromotionList from '../views/PromotionList.vue';
+import AddPromotion from '../views/AddPromotion.vue';
+import EditPromotion from '../views/EditPromotion.vue';
 import PrivacyPolicy from '../views/PrivacyPolicy.vue';
 import LegalMentions from '../views/LegalMentions.vue';
 import TermsAndConditions from '../views/TermsAndConditions.vue';
+import StockDashboard from '../views/StockDashboard.vue';
+import ComptaDashboard from '../views/ComptaDashboard.vue';
+import NewsletterManager from '../views/NewsletterManager.vue';
 import { jwtDecode } from 'jwt-decode';
 import NotFound from '../views/NotFound.vue';
 interface DecodedToken {
@@ -35,7 +42,14 @@ const routes: Array<RouteRecordRaw> = [
   { path: '/search', name: 'ProductSearch', component: ProductSearch },
   { path: '/cart', name: 'Cart', component: Cart, meta: { requiresAuth: true } },
   { path: '/profile', name: 'Profile', component: Profile, meta: { requiresAuth: true } },
+  { path: '/promotions', name: 'PromotionList', component: PromotionList, meta: { requiresAuth: true, requiresRole: ['ROLE_STORE_KEEPER', 'ROLE_ADMIN'] } },
+  { path: '/add-promotion', name: 'AddPromotion', component: AddPromotion, meta: { requiresAuth: true, requiresRole: ['ROLE_STORE_KEEPER', 'ROLE_ADMIN'] } },
+  { path: '/edit-promotion/:id', name: 'EditPromotion', component: EditPromotion, meta: { requiresAuth: true, requiresRole: ['ROLE_STORE_KEEPER', 'ROLE_ADMIN'] } },
   { path: '/admin-dashboard', name: 'AdminDashboard', component: AdminDashboard, meta: { requiresAuth: true, requiresRole: 'ROLE_ADMIN' } },
+  { path: '/dashboard-analytics', name: 'DashboardAnalytics', component: DashboardAnalytics, meta: { requiresAuth: true, requiresRole: 'ROLE_ADMIN' } },
+  { path: '/stock-dashboard', name: 'StockDashboard', component: StockDashboard, meta: { requiresAuth: true, requiresRole: ['ROLE_STORE_KEEPER', 'ROLE_ADMIN'] } },
+  { path: '/compta-dashboard', name: 'ComptaDashboard', component: ComptaDashboard, meta: { requiresAuth: true, requiresRole: 'ROLE_COMPTA' } },
+  { path: '/newsletter-manager', name: 'NewsletterManager', component: NewsletterManager, meta: { requiresAuth: true, requiresRole: ['ROLE_STORE_KEEPER', 'ROLE_ADMIN'] } },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }
   
 ];

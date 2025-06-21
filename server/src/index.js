@@ -8,6 +8,12 @@ import stripeRouter from './routes/stripe.js';
 import profileRouter from './routes/profile.js';
 import orderRouter from './routes/order.js';
 import userRoutes from './routes/user.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
+import alertRoutes from './routes/alert.js';
+import userPreferencesRoutes from './routes/userPreferences.js';
+import promotionRoutes from './routes/promotion.js';
+import stockRoutes from './routes/stock.js';
+import comptaRoutes from './routes/compta.js';
 import sequelize from './config/database.js';
 import connectMongoDB from './config/mongo.js';
 import dotenv from 'dotenv';
@@ -29,10 +35,10 @@ connectMongoDB();
 sequelize.authenticate()
   .then(() => {
     console.log('Connected to PostgreSQL');
-    return sequelize.sync();
+    return sequelize.sync({ alter: true });
   })
   .then(() => {
-    console.log('Database synchronized');
+    console.log('Database synchronized with schema updates');
   })
   .catch(err => {
     console.error('Failed to connect to PostgreSQL', err);
@@ -46,6 +52,12 @@ server.use('/api/stripe', stripeRouter);
 server.use('/api/users/profile', profileRouter);
 server.use('/api/users/orders', orderRouter);
 server.use('/api/users', userRoutes);
+server.use('/api/admin/dashboard', dashboardRoutes);
+server.use('/api/alerts', alertRoutes);
+server.use('/api/user-preferences', userPreferencesRoutes);
+server.use('/api/promotions', promotionRoutes);
+server.use('/api/stock', stockRoutes);
+server.use('/api/compta', comptaRoutes);
 
 server.use((err, req, res, next) => {
   console.error(err.stack);

@@ -22,8 +22,18 @@ apiClient.interceptors.request.use((config) => {
 });
 
 export const fetchUsers = async (): Promise<User[]> => {
-  const response = await apiClient.get('/');
-  return response.data;
+  console.log('fetchUsers called');
+  console.log('Token:', localStorage.getItem('token') ? 'Present' : 'Missing');
+  console.log('API URL:', `${import.meta.env.VITE_API_URL}/users`);
+  
+  try {
+    const response = await apiClient.get('/');
+    console.log('fetchUsers response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('fetchUsers error:', error);
+    throw error;
+  }
 };
 
 export const fetchOrders = async (): Promise<Order[]> => {
@@ -51,12 +61,17 @@ export const deleteUser = async (id: number): Promise<void> => {
 };
 
 export const fetchUserProfile = async (): Promise<User> => {
-  const response = await apiClient.get('/profile');
+  const response = await axios.get(`${import.meta.env.VITE_API_URL}/profile`, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+  });
   return response.data;
 };
 
 export const fetchUserOrders = async (): Promise<Order[]> => {
-  const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/orders`, {
+  const response = await axios.get(`${import.meta.env.VITE_API_URL}/orders`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -67,18 +82,28 @@ export const fetchUserOrders = async (): Promise<Order[]> => {
 };
 
 export const fetchAllOrders = async (): Promise<Order[]> => {
-  const response = await apiClient.get('/orders', {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-  });
-  return response.data;
+  console.log('fetchAllOrders called');
+  console.log('Token:', localStorage.getItem('token') ? 'Present' : 'Missing');
+  console.log('API URL:', `${import.meta.env.VITE_API_URL}/orders/orders`);
+  
+  try {
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/orders/orders`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    console.log('fetchAllOrders response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('fetchAllOrders error:', error);
+    throw error;
+  }
 };
 
 export const downloadInvoice = async (orderId: number) => {
   const token = localStorage.getItem('token');
-  const response = await axios.get(`${API_URL}/orders/${orderId}/invoice`, {
+  const response = await axios.get(`${import.meta.env.VITE_API_URL}/orders/${orderId}/invoice`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,

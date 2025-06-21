@@ -219,7 +219,7 @@
                   class="mr-2"
                 />
                 <label :for="`prod-${product.productId}`" class="text-sm">
-                  {{ product.name }} - {{ product.price }}€
+                  {{ product.name }} - {{ (product.price / 100).toFixed(2) }}€
                 </label>
               </div>
             </div>

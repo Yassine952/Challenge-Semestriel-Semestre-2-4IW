@@ -1,4 +1,4 @@
-
+// Migration pour ajouter les colonnes de remboursement à la table Order
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 
@@ -6,7 +6,9 @@ const addRefundColumns = async () => {
   const queryInterface = sequelize.getQueryInterface();
   
   try {
-    console.log('🔄 Ajout des colonnes de remboursement...');
+    console.log('🔄 Ajout des colonnes de remboursement...');
+    
+    // Ajouter les colonnes Stripe
     await queryInterface.addColumn('Orders', 'stripePaymentIntentId', {
       type: DataTypes.STRING,
       allowNull: true
@@ -15,7 +17,9 @@ const addRefundColumns = async () => {
     await queryInterface.addColumn('Orders', 'stripeChargeId', {
       type: DataTypes.STRING,
       allowNull: true
-    });
+    });
+    
+    // Ajouter les colonnes de remboursement
     await queryInterface.addColumn('Orders', 'refundRequested', {
       type: DataTypes.BOOLEAN,
       defaultValue: false
@@ -51,7 +55,9 @@ const addRefundColumns = async () => {
       throw error;
     }
   }
-};
+};
+
+// Exécuter la migration si ce fichier est appelé directement
 if (import.meta.url === `file://${process.argv[1]}`) {
   addRefundColumns()
     .then(() => {

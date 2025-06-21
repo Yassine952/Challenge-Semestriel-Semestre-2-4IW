@@ -28,7 +28,9 @@ const PromotionSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true }
 }, {
   timestamps: true
-});
+});
+
+// Index pour optimiser les recherches
 PromotionSchema.index({ code: 1 });
 PromotionSchema.index({ startDate: 1, endDate: 1 });
 PromotionSchema.index({ isActive: 1 });

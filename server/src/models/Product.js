@@ -21,6 +21,10 @@ const Product = sequelize.define('Product', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  brand: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   onSale: {
     type: DataTypes.BOOLEAN,
     defaultValue: false

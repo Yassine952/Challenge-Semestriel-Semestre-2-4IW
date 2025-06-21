@@ -1,5 +1,12 @@
 import StockHistoryMongo from '../models/StockHistoryMongo.js';
 
+/**
+ * Service MongoDB optimisé pour les graphiques de stocks
+ */
+
+/**
+ * Obtient l'évolution globale des stocks avec MongoDB (TRÈS RAPIDE)
+ */
 export const getGlobalStockEvolutionMongo = async (period = '3m') => {
   try {
     const matchStage = getMongoMatchStage(period);
@@ -12,7 +19,8 @@ export const getGlobalStockEvolutionMongo = async (period = '3m') => {
             year: '$dateInfo.year',
             month: '$dateInfo.month',
             day: '$dateInfo.day'
-          },
+          },
+          // Prendre le dernier stock de chaque jour
           totalStock: { $last: '$quantityAfter' },
           movements: { $sum: 1 },
           date: { $last: '$createdAt' }
@@ -45,6 +53,9 @@ export const getGlobalStockEvolutionMongo = async (period = '3m') => {
   }
 };
 
+/**
+ * Obtient l'évolution d'un produit spécifique (ULTRA RAPIDE)
+ */
 export const getProductStockEvolutionMongo = async (productId, period = '3m') => {
   try {
     const matchStage = {
@@ -88,6 +99,9 @@ export const getProductStockEvolutionMongo = async (productId, period = '3m') =>
   }
 };
 
+/**
+ * Statistiques des mouvements par type (PIPELINE MONGO)
+ */
 export const getStockMovementsByTypeMongo = async (period = '1m') => {
   try {
     const matchStage = getMongoMatchStage(period);
@@ -132,6 +146,9 @@ export const getStockMovementsByTypeMongo = async (period = '1m') => {
   }
 };
 
+/**
+ * Top produits avec le plus de mouvements (PERFORMANCE MONGO)
+ */
 export const getTopStockMovementsMongo = async (period = '1m', limit = 10) => {
   try {
     const matchStage = getMongoMatchStage(period);
@@ -181,6 +198,9 @@ export const getTopStockMovementsMongo = async (period = '1m', limit = 10) => {
   }
 };
 
+/**
+ * Analyse temporelle avancée (UNIQUE À MONGO)
+ */
 export const getStockAnalyticsMongo = async (period = '1m') => {
   try {
     const matchStage = getMongoMatchStage(period);
@@ -225,8 +245,12 @@ export const getStockAnalyticsMongo = async (period = '1m') => {
   }
 };
 
+/**
+ * Alertes de stock avec contexte historique (ENRICHI MONGO)
+ */
 export const getLowStockWithContextMongo = async (threshold = 10) => {
-  try {
+  try {
+    // Récupérer les produits en stock faible avec leur historique récent
     const pipeline = [
       {
         $match: {
@@ -303,6 +327,9 @@ export const getLowStockWithContextMongo = async (threshold = 10) => {
   }
 };
 
+/**
+ * Filtre de période pour MongoDB
+ */
 const getMongoMatchStage = (period) => {
   const now = new Date();
   let startDate;

@@ -1,6 +1,9 @@
 import Cart from '../models/Cart.js';
 import CartItem from '../models/CartItem.js';
 import Product from '../models/Product.js';
+import ProductMongo from '../models/ProductMongo.js';
+import StockSyncService from '../services/stockSyncService.js';
+import { updateProductStockRelative } from '../services/hybridStockService.js';
 import { Op } from 'sequelize';
 import cron from 'node-cron';
 
@@ -17,9 +20,26 @@ export const cleanExpiredItems = async () => {
   });
 
   for (const item of expiredItems) {
-    const product = await Product.findByPk(item.productId);
-    product.stock += item.quantity;
-    await product.save();
+    try {
+      // 🔧 CORRECTION: Utiliser la fonction relative pour libérer le stock expiré
+      await updateProductStockRelative(
+        item.productId,
+        item.quantity, // Quantité positive pour remettre en stock
+        1, // Admin user fallback
+        'release',
+        'Libération stock panier expiré',
+        `expired-cart-${item.cartId}-${Date.now()}`
+      );
+      console.log(`✅ Stock libéré via architecture hybride - Produit ${item.productId}: ${item.quantity} unités`);
+    } catch (hybridError) {
+      console.error('❌ Erreur architecture hybride lors de la libération:', hybridError);
+      // Fallback : libération classique
+      const product = await Product.findByPk(item.productId);
+      if (product) {
+        product.stock += item.quantity;
+        await product.save();
+      }
+    }
     await item.destroy();
   }
 
@@ -71,7 +91,8 @@ export const addToCart = async (req, res) => {
 
     await cleanExpiredItems(cart.id);
 
-    const product = await Product.findByPk(productId);
+    // 🔧 CORRECTION: Utiliser MongoDB pour récupérer le produit (selon cahier des charges)
+    const product = await ProductMongo.findOne({ productId });
     if (!product) {
       return res.status(404).json({ message: 'Produit non trouvé' });
     }
@@ -98,8 +119,22 @@ export const addToCart = async (req, res) => {
       });
     }
 
-    product.stock -= quantity;
-    await product.save();
+    // 🔧 CORRECTION: Utiliser la fonction relative pour réserver le stock
+    try {
+      await updateProductStockRelative(
+        productId,
+        -quantity, // Quantité négative pour réserver le stock
+        userId,
+        'reservation',
+        `Réservation panier - ${quantity} unités`,
+        `cart-${cart.id}-${Date.now()}`
+      );
+      console.log(`✅ Stock réservé via architecture hybride - Produit ${productId}: ${quantity} unités`);
+    } catch (hybridError) {
+      console.error('❌ Erreur architecture hybride lors de l\'ajout au panier:', hybridError);
+      // Fallback : utiliser l'ancien service
+      await StockSyncService.reserveStock(productId, quantity, userId, cart.id);
+    }
 
     cart.totalPrice = await CartItem.sum('price', { where: { cartId: cart.id } });
     await cart.save();
@@ -130,9 +165,22 @@ export const removeFromCart = async (req, res) => {
       return res.status(404).json({ message: 'Produit non trouvé dans le panier' });
     }
 
-    const product = await Product.findByPk(productId);
-    product.stock += cartItem.quantity;
-    await product.save();
+    // 🔧 CORRECTION: Utiliser la fonction relative pour libérer le stock
+    try {
+      await updateProductStockRelative(
+        productId,
+        cartItem.quantity, // Quantité positive pour libérer le stock
+        userId,
+        'release',
+        `Libération stock panier - ${cartItem.quantity} unités`,
+        `cart-release-${cart.id}-${Date.now()}`
+      );
+      console.log(`✅ Stock libéré via architecture hybride - Produit ${productId}: ${cartItem.quantity} unités`);
+    } catch (hybridError) {
+      console.error('❌ Erreur architecture hybride lors de la suppression du panier:', hybridError);
+      // Fallback : utiliser l'ancien service
+      await StockSyncService.releaseStock(productId, cartItem.quantity, userId, cart.id);
+    }
 
     cart.totalPrice -= cartItem.price;
     await cartItem.destroy();
@@ -159,9 +207,8 @@ export const clearCart = async (req, res) => {
 
     const cartItems = await CartItem.findAll({ where: { cartId: cart.id } });
     for (const cartItem of cartItems) {
-      const product = await Product.findByPk(cartItem.productId);
-      product.stock += cartItem.quantity;
-      await product.save();
+      // Utiliser le service de synchronisation pour libérer le stock
+      await StockSyncService.releaseStock(cartItem.productId, cartItem.quantity, userId, cart.id);
     }
 
     await CartItem.destroy({ where: { cartId: cart.id } });

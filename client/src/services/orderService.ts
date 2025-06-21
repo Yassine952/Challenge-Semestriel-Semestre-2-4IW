@@ -28,3 +28,33 @@ export const downloadInvoice = async (orderId: number) => {
   document.body.appendChild(link);
   link.click();
 };
+
+export const requestReturn = async (orderId: number, reason: string) => {
+  const token = localStorage.getItem('token');
+  const response = await axios.post(
+    `${import.meta.env.VITE_API_URL}/orders/${orderId}/return`,
+    { reason },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+export const reorderProducts = async (orderId: number) => {
+  const token = localStorage.getItem('token');
+  const response = await axios.post(
+    `${import.meta.env.VITE_API_URL}/orders/${orderId}/reorder`,
+    {},
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+};

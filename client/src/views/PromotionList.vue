@@ -150,10 +150,7 @@
       </div>
     </div>
 
-    <!-- Messages -->
-    <div v-if="message" :class="messageClass" class="fixed bottom-4 right-4 p-4 rounded-md shadow-lg">
-      {{ message }}
-    </div>
+
   </div>
 </template>
 
@@ -161,20 +158,17 @@
 import { defineComponent, ref, onMounted, computed } from 'vue';
 import { fetchPromotions, deletePromotion } from '../services/promotionService';
 import { Promotion } from '../types/Promotion';
+import { useNotifications } from '../composables/useNotifications';
 
 export default defineComponent({
   name: 'PromotionList',
   setup() {
+    const { addNotification } = useNotifications();
     const promotions = ref<Promotion[]>([]);
     const isLoading = ref(true);
     const filterType = ref<'all' | 'active' | 'expired'>('all');
-    const message = ref('');
-    const messageType = ref<'success' | 'error'>('success');
 
-    const messageClass = computed(() => ({
-      'bg-green-100 text-green-800 border border-green-200': messageType.value === 'success',
-      'bg-red-100 text-red-800 border border-red-200': messageType.value === 'error'
-    }));
+
 
     const activePromotions = computed(() => {
       const now = new Date();
@@ -206,7 +200,7 @@ export default defineComponent({
         isLoading.value = true;
         promotions.value = await fetchPromotions();
       } catch (error: any) {
-        showMessage(error.message || 'Erreur lors du chargement des promotions', 'error');
+        addNotification(error.message || 'Erreur lors du chargement des promotions', 'error');
       } finally {
         isLoading.value = false;
       }
@@ -220,19 +214,13 @@ export default defineComponent({
       try {
         await deletePromotion(id);
         await loadPromotions();
-        showMessage('Promotion supprimée avec succès', 'success');
+        addNotification('Promotion supprimée avec succès', 'success');
       } catch (error: any) {
-        showMessage(error.message || 'Erreur lors de la suppression', 'error');
+        addNotification(error.message || 'Erreur lors de la suppression', 'error');
       }
     };
 
-    const showMessage = (msg: string, type: 'success' | 'error') => {
-      message.value = msg;
-      messageType.value = type;
-      setTimeout(() => {
-        message.value = '';
-      }, 5000);
-    };
+
 
     const formatDate = (dateString: string) => {
       return new Date(dateString).toLocaleDateString('fr-FR');
@@ -289,8 +277,6 @@ export default defineComponent({
       promotions,
       isLoading,
       filterType,
-      message,
-      messageClass,
       activePromotions,
       expiredPromotions,
       filteredPromotions,

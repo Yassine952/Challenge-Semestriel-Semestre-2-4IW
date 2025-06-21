@@ -321,7 +321,9 @@ export default defineComponent({
         loading.value = true;
         const promotionId = parseInt(route.params.id as string);
         const data = await fetchPromotionById(promotionId);
-        promotion.value = data;
+        promotion.value = data;
+
+        // Remplir le formulaire
         handleChange('code', data.code);
         handleChange('description', data.description);
         handleChange('discountType', data.discountType);

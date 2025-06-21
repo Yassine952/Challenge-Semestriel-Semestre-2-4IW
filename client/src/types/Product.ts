@@ -5,5 +5,6 @@ export interface Product {
   price: number;
   stock: number;
   category: string;
+  brand?: string;
   onSale: boolean;
 }

@@ -55,15 +55,15 @@
       <div class="text-sm text-gray-600">
         <div class="flex justify-between">
           <span>Sous-total :</span>
-          <span>{{ cartTotal.toFixed(2) }}€</span>
+          <span>{{ (cartTotal / 100).toFixed(2) }}€</span>
         </div>
         <div class="flex justify-between text-green-600 font-medium">
           <span>Réduction :</span>
-          <span>-{{ discountAmount.toFixed(2) }}€</span>
+          <span>-{{ (discountAmount / 100).toFixed(2) }}€</span>
         </div>
         <div class="flex justify-between font-bold text-lg border-t pt-2 mt-2">
           <span>Total :</span>
-          <span>{{ finalTotal.toFixed(2) }}€</span>
+          <span>{{ (finalTotal / 100).toFixed(2) }}€</span>
         </div>
       </div>
     </div>
@@ -121,11 +121,14 @@ export default defineComponent({
 
         if (result.valid) {
           appliedPromo.value = result;
-          discountAmount.value = result.discountAmount || 0;
-          successMessage.value = result.message;
+          // Convertir la réduction en centimes pour cohérence avec cartTotal
+          discountAmount.value = (result.discountAmount || 0) * 100;
+          successMessage.value = result.message;
+          
+          // Émettre l'événement avec les détails de la promotion
           emit('promo-applied', {
             code: promoCode.value.trim(),
-            discount: discountAmount.value,
+            discount: result.discountAmount || 0, // Garder en euros pour Cart.vue
             finalTotal: finalTotal.value,
             promotion: result.promotion
           });
@@ -159,9 +162,12 @@ export default defineComponent({
       } else {
         return `${discountValue}€`;
       }
-    };
+    };
+
+    // Réinitialiser si le panier change
     watch(() => props.cartTotal, () => {
-      if (appliedPromo.value) {
+      if (appliedPromo.value) {
+        // Revalider le code promo si le panier change
         validatePromo();
       }
     });

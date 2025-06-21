@@ -26,8 +26,7 @@
             Demander la réinitialisation
           </button>
         </form>
-        <p v-if="message" class="mt-4 text-green-500">{{ message }}</p>
-        <p v-if="error" class="mt-4 text-red-500">{{ error }}</p>
+
       </div>
     </div>
   </main>
@@ -35,13 +34,13 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
+import { useNotifications } from '../composables/useNotifications';
 
 export default defineComponent({
   name: 'ForgotPassword',
   setup() {
+    const { addNotification } = useNotifications();
     const email = ref('');
-    const message = ref('');
-    const error = ref('');
 
     const requestPasswordReset = async () => {
       try {
@@ -56,22 +55,17 @@ export default defineComponent({
         const data = await response.json();
 
         if (response.ok) {
-          message.value = 'Email de réinitialisation du mot de passe envoyé. Veuillez vérifier votre email.';
-          error.value = '';
+          addNotification('Email de réinitialisation du mot de passe envoyé. Veuillez vérifier votre email.', 'success');
         } else {
-          error.value = data.errors ? data.errors.map(err => err.msg).join(', ') : `La demande a échoué: ${data.message}`;
-          message.value = '';
+          addNotification(data.errors ? data.errors.map(err => err.msg).join(', ') : `La demande a échoué: ${data.message}`, 'error');
         }
       } catch (err) {
-        error.value = `La demande a échoué: ${err.message}`;
-        message.value = '';
+        addNotification(`La demande a échoué: ${err.message}`, 'error');
       }
     };
 
     return {
       email,
-      message,
-      error,
       requestPasswordReset,
     };
   },

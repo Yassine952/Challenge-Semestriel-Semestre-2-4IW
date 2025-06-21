@@ -1,4 +1,4 @@
-
+// Utilisation de MongoDB pour les données du dashboard
 const getPeriodFilter = (period) => {
   const now = new Date();
   let startDate;
@@ -56,14 +56,20 @@ export const getStats = async (req, res) => {
   try {
     const { period = '30d' } = req.query;
     const periodFilter = getPeriodFilter(period);
-    const previousPeriodFilter = getPreviousPeriodFilter(period);
+    const previousPeriodFilter = getPreviousPeriodFilter(period);
+
+    // Import dynamique de MongoDB
     const { default: OrderMongo } = await import('../models/OrderMongo.js');
     const { default: User } = await import('../models/User.js');
     const { default: Product } = await import('../models/Product.js');
 
-    console.log('Dashboard Stats - Period filter:', periodFilter);
+    console.log('Dashboard Stats - Period filter:', periodFilter);
+
+    // Compter les commandes
     const totalOrders = await OrderMongo.countDocuments(periodFilter);
-    const previousOrders = await OrderMongo.countDocuments(previousPeriodFilter);
+    const previousOrders = await OrderMongo.countDocuments(previousPeriodFilter);
+
+    // Calculer le chiffre d'affaires (commandes terminées uniquement)
     const revenueFilter = { ...periodFilter, status: 'Completed' };
     const previousRevenueFilter = { ...previousPeriodFilter, status: 'Completed' };
 
@@ -77,7 +83,9 @@ export const getStats = async (req, res) => {
       { $match: previousRevenueFilter },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } }
     ]);
-    const previousRevenue = previousRevenueResult.length > 0 ? previousRevenueResult[0].total : 0;
+    const previousRevenue = previousRevenueResult.length > 0 ? previousRevenueResult[0].total : 0;
+
+    // Compter les utilisateurs (PostgreSQL) - Import Sequelize Op
     const { Op } = await import('sequelize');
     
     const totalUsers = await User.count({ 
@@ -94,8 +102,12 @@ export const getStats = async (req, res) => {
           [Op.lt]: previousPeriodFilter.createdAt.$lt 
         } 
       } 
-    });
-    const totalProducts = await Product.count();
+    });
+
+    // Compter les produits (PostgreSQL)
+    const totalProducts = await Product.count();
+
+    // Calculer les changements en pourcentage
     const ordersChange = previousOrders > 0 ? Math.round(((totalOrders - previousOrders) / previousOrders) * 100) : 0;
     const revenueChange = previousRevenue > 0 ? Math.round(((totalRevenue - previousRevenue) / previousRevenue) * 100) : 0;
     const usersChange = previousUsers > 0 ? Math.round(((totalUsers - previousUsers) / previousUsers) * 100) : 0;
@@ -275,19 +287,21 @@ export const getRevenueByCategory = async (req, res) => {
     const periodFilter = getPeriodFilter(period);
 
     const OrderMongo = (await import('../models/OrderMongo.js')).default;
-    const Product = (await import('../models/Product.js')).default;
+    const ProductMongo = (await import('../models/ProductMongo.js')).default;
 
-    console.log('getRevenueByCategory - Period filter:', periodFilter);
-    const products = await Product.findAll({
-      attributes: ['name', 'category']
-    });
+    console.log('getRevenueByCategory - Period filter:', periodFilter);
+
+    // Récupérer les produits avec leurs catégories depuis MongoDB
+    const products = await ProductMongo.find({}, { name: 1, category: 1 });
 
     console.log('getRevenueByCategory - Products found:', products.length);
 
     const productCategoryMap = {};
     products.forEach(product => {
       productCategoryMap[product.name] = product.category || 'Non catégorisé';
-    });
+    });
+
+    // Récupérer les revenus par produit depuis MongoDB
     const revenueByProduct = await OrderMongo.aggregate([
       { $match: { ...periodFilter, status: 'Completed' } },
       { $unwind: '$items' },
@@ -300,7 +314,9 @@ export const getRevenueByCategory = async (req, res) => {
       { $sort: { totalRevenue: -1 } }
     ]);
 
-    console.log('getRevenueByCategory - Revenue by product:', revenueByProduct);
+    console.log('getRevenueByCategory - Revenue by product:', revenueByProduct);
+
+    // Grouper par catégorie
     const categoryRevenue = {};
     revenueByProduct.forEach(item => {
       const category = productCategoryMap[item._id] || 'Non catégorisé';
@@ -308,7 +324,9 @@ export const getRevenueByCategory = async (req, res) => {
     });
 
     const labels = Object.keys(categoryRevenue);
-    const data = labels.map(label => Math.round(categoryRevenue[label] * 100) / 100);
+    const data = labels.map(label => Math.round(categoryRevenue[label] * 100) / 100);
+    
+    // Si pas de données, retourner des données par défaut
     if (labels.length === 0) {
       return res.json({
         labels: ['Aucune donnée'],
@@ -343,9 +361,13 @@ export const getRevenueByCategory = async (req, res) => {
 
 export const getUsersOverTime = async (req, res) => {
   try {
-    const { period = '30d' } = req.query;
+    const { period = '30d' } = req.query;
+    
+    // Import statique pour éviter les problèmes
     const User = (await import('../models/User.js')).default;
-    const { Op } = await import('sequelize');
+    const { Op } = await import('sequelize');
+    
+    // Calculer la date de début selon la période
     const now = new Date();
     let startDate;
     switch (period) {

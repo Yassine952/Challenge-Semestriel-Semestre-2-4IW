@@ -3,10 +3,12 @@ import UserMongo from '../models/UserMongo.js';
 import AlertHistory from '../models/AlertHistory.js';
 import Product from '../models/Product.js';
 
+// Récupérer les préférences d'alertes de l'utilisateur
 export const getUserAlertPreferences = async (req, res) => {
   try {
-    const userId = req.user.id;
-
+    const userId = req.user.id; // Utiliser req.user.id au lieu de req.user.userId
+    
+    // Lire depuis MongoDB (comme demandé)
     const userMongo = await UserMongo.findOne({ userId });
     if (!userMongo) {
       return res.status(404).json({ message: 'Utilisateur non trouvé' });
@@ -27,9 +29,10 @@ export const getUserAlertPreferences = async (req, res) => {
   }
 };
 
+// Mettre à jour les préférences d'alertes de l'utilisateur
 export const updateUserAlertPreferences = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.id; // Utiliser req.user.id au lieu de req.user.userId
     const { 
       alertNewProducts, 
       alertRestock, 
@@ -38,6 +41,7 @@ export const updateUserAlertPreferences = async (req, res) => {
       alertCategories 
     } = req.body;
 
+    // Mettre à jour dans PostgreSQL
     const user = await User.findByPk(userId);
     if (!user) {
       return res.status(404).json({ message: 'Utilisateur non trouvé' });
@@ -51,6 +55,7 @@ export const updateUserAlertPreferences = async (req, res) => {
       alertCategories: alertCategories !== undefined ? alertCategories : user.alertCategories
     });
 
+    // Mettre à jour dans MongoDB
     const userMongo = await UserMongo.findOne({ userId });
     if (userMongo) {
       await userMongo.updateOne({
@@ -80,6 +85,7 @@ export const updateUserAlertPreferences = async (req, res) => {
   }
 };
 
+// Récupérer toutes les catégories disponibles
 export const getAvailableCategories = async (req, res) => {
   try {
     const categories = await User.sequelize.query(
@@ -95,13 +101,15 @@ export const getAvailableCategories = async (req, res) => {
   }
 };
 
+// Récupérer l'historique des alertes de l'utilisateur
 export const getUserAlertHistory = async (req, res) => {
   try {
     const userId = req.user.id;
     const { page = 1, limit = 20, type } = req.query;
-
+    
+    // Validation et conversion sécurisée des paramètres
     const pageNum = Math.max(1, parseInt(page) || 1);
-    const limitNum = Math.max(1, Math.min(100, parseInt(limit) || 20));
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit) || 20)); // Limite max de 100
     
     const whereClause = { userId };
     if (type && type.trim()) {
@@ -134,6 +142,7 @@ export const getUserAlertHistory = async (req, res) => {
   }
 };
 
+// Marquer une alerte comme lue
 export const markAlertAsRead = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -156,6 +165,7 @@ export const markAlertAsRead = async (req, res) => {
   }
 };
 
+// Marquer toutes les alertes comme lues
 export const markAllAlertsAsRead = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -172,6 +182,7 @@ export const markAllAlertsAsRead = async (req, res) => {
   }
 };
 
+// Récupérer le nombre d'alertes non lues
 export const getUnreadAlertsCount = async (req, res) => {
   try {
     const userId = req.user.id;

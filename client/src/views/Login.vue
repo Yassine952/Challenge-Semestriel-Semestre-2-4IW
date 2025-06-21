@@ -43,7 +43,7 @@
           </router-link>
         </div>
       </form>
-      <p v-if="error" class="error mt-4 text-red-500 text-center">{{ error }}</p>
+
     </div>
   </main>
 </template>
@@ -52,13 +52,14 @@
 import { defineComponent, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { jwtDecode } from 'jwt-decode';
+import { useNotifications } from '../composables/useNotifications';
 
 export default defineComponent({
   name: 'Login',
   setup() {
+    const { addNotification } = useNotifications();
     const email = ref('');
     const password = ref('');
-    const error = ref('');
     const router = useRouter();
 
     const login = async () => {
@@ -83,17 +84,16 @@ export default defineComponent({
           window.dispatchEvent(new CustomEvent('loginStatusChanged'));
           router.push('/');
         } else {
-          error.value = `Échec de la connexion : ${data.message}`;
+          addNotification(`Échec de la connexion : ${data.message}`, 'error');
         }
       } catch (err) {
-        error.value = `Échec de la connexion : ${err.message}`;
+        addNotification(`Échec de la connexion : ${err.message}`, 'error');
       }
     };
 
     return {
       email,
       password,
-      error,
       login,
     };
   },
