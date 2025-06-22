@@ -121,205 +121,235 @@
 
       <!-- Table des produits -->
       <div v-else class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/50 overflow-hidden">
-        <!-- En-tête du tableau -->
-        <div class="px-6 py-4 border-b border-gray-200/50 bg-gray-50/50">
-          <div class="grid grid-cols-8 gap-4 items-center text-sm font-medium text-gray-700">
-            <div class="flex items-center">
-              <input
-                type="checkbox"
-                :checked="allSelected"
-                @change="toggleSelectAll"
-                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-              />
-            </div>
-            <div 
-              class="cursor-pointer hover:text-blue-600 transition-colors flex items-center space-x-1"
-              @click="sortColumn('name')"
-            >
-              <span>Nom</span>
-              <svg v-if="sortKey === 'name'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortOrder === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
-              </svg>
-            </div>
-            <div 
-              class="cursor-pointer hover:text-blue-600 transition-colors flex items-center space-x-1"
-              @click="sortColumn('description')"
-            >
-              <span>Description</span>
-              <svg v-if="sortKey === 'description'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortOrder === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
-              </svg>
-            </div>
-            <div 
-              class="cursor-pointer hover:text-blue-600 transition-colors flex items-center space-x-1"
-              @click="sortColumn('price')"
-            >
-              <span>Prix</span>
-              <svg v-if="sortKey === 'price'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortOrder === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
-              </svg>
-            </div>
-            <div 
-              class="cursor-pointer hover:text-blue-600 transition-colors flex items-center space-x-1"
-              @click="sortColumn('stock')"
-            >
-              <span>Stock</span>
-              <svg v-if="sortKey === 'stock'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortOrder === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
-              </svg>
-            </div>
-            <div 
-              class="cursor-pointer hover:text-blue-600 transition-colors flex items-center space-x-1"
-              @click="sortColumn('category')"
-            >
-              <span>Catégorie</span>
-              <svg v-if="sortKey === 'category'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortOrder === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
-              </svg>
-            </div>
-            <div 
-              class="cursor-pointer hover:text-blue-600 transition-colors flex items-center space-x-1"
-              @click="sortColumn('onSale')"
-            >
-              <span>En Vente</span>
-              <svg v-if="sortKey === 'onSale'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortOrder === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
-              </svg>
-            </div>
-            <div>Actions</div>
-          </div>
-        </div>
-
-        <!-- Filtres -->
+        <!-- Filtres en haut -->
         <div class="px-6 py-4 border-b border-gray-200/50 bg-blue-50/30">
-          <div class="grid grid-cols-8 gap-4 items-center">
-            <div></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <input 
               type="text" 
               v-model="filters.name" 
               @input="filterData" 
-              placeholder="Rechercher nom..." 
-              class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              placeholder="Rechercher par nom..." 
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
             <input 
               type="text" 
               v-model="filters.description" 
               @input="filterData" 
-              placeholder="Rechercher description..." 
-              class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              placeholder="Rechercher par description..." 
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
             <input 
               type="text" 
               v-model="filters.price" 
               @input="filterData" 
-              placeholder="Rechercher prix..." 
-              class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              placeholder="Rechercher par prix (€)..." 
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
             <input 
-              type="text" 
+              type="number" 
               v-model="filters.stock" 
               @input="filterData" 
-              placeholder="Rechercher stock..." 
-              class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              placeholder="Rechercher par stock..." 
+              min="0"
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
             <input 
               type="text" 
               v-model="filters.category" 
               @input="filterData" 
-              placeholder="Rechercher catégorie..." 
-              class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              placeholder="Rechercher par catégorie..." 
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
-            <input 
-              type="text" 
+            <select 
               v-model="filters.onSale" 
-              @input="filterData" 
-              placeholder="Oui/Non..." 
-              class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              @change="filterData" 
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
-            <div></div>
+              <option value="">Tous les produits</option>
+              <option value="true">En vente</option>
+              <option value="false">Hors vente</option>
+            </select>
           </div>
         </div>
 
-        <!-- Corps du tableau -->
-        <div class="divide-y divide-gray-200/50">
-          <div 
-            v-for="product in paginatedData" 
-            :key="product.productId" 
-            class="px-6 py-4 hover:bg-blue-50/30 transition-colors"
-            :class="{ 'bg-blue-50/50': selectedProducts.includes(product.productId) }"
-          >
-            <div class="grid grid-cols-8 gap-4 items-center">
-              <!-- Checkbox -->
-              <div>
-                <input
-                  type="checkbox"
-                  :checked="selectedProducts.includes(product.productId)"
-                  @change="toggleProductSelection(product.productId)"
-                  class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-              </div>
-              
-              <!-- Nom -->
-              <div class="font-medium text-gray-900">
-                {{ product.name }}
-              </div>
-              
-              <!-- Description -->
-              <div class="text-gray-600 text-sm">
-                {{ product.description }}
-              </div>
-              
-              <!-- Prix -->
-              <div class="font-semibold text-green-600">
-                {{ (product.price / 100).toFixed(2) }} €
-              </div>
-              
-              <!-- Stock -->
-              <div>
-                <span 
-                  class="px-2 py-1 text-xs rounded-full"
-                  :class="product.stock > 10 ? 'bg-green-100 text-green-800' : product.stock > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'"
+        <!-- Tableau véritable -->
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <!-- En-tête du tableau -->
+            <thead class="bg-gray-50/50 border-b border-gray-200/50">
+              <tr>
+                <th class="px-4 py-3 text-left">
+                  <input
+                    type="checkbox"
+                    :checked="allSelected"
+                    @change="toggleSelectAll"
+                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                </th>
+                <th 
+                  class="px-4 py-3 text-left text-sm font-medium text-gray-700 cursor-pointer hover:text-blue-600 transition-colors"
+                  @click="sortColumn('name')"
                 >
-                  {{ product.stock }}
-                </span>
-              </div>
-              
-              <!-- Catégorie -->
-              <div>
-                <span class="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
-                  {{ product.category }}
-                </span>
-              </div>
-              
-              <!-- En Vente -->
-              <div>
-                <span 
-                  class="px-2 py-1 text-xs rounded-full"
-                  :class="product.onSale ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'"
+                  <div class="flex items-center space-x-1">
+                    <span>Nom</span>
+                    <svg v-if="sortKey === 'name'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortOrder === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                    </svg>
+                  </div>
+                </th>
+                <th 
+                  class="px-4 py-3 text-left text-sm font-medium text-gray-700 cursor-pointer hover:text-blue-600 transition-colors"
+                  @click="sortColumn('description')"
                 >
-                  {{ product.onSale ? 'Oui' : 'Non' }}
-                </span>
-              </div>
-              
-              <!-- Actions -->
-              <div class="flex items-center space-x-3">
-                <router-link 
-                  :to="`/edit-product/${product.productId}`" 
-                  class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors flex items-center space-x-1"
+                  <div class="flex items-center space-x-1">
+                    <span>Description</span>
+                    <svg v-if="sortKey === 'description'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortOrder === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                    </svg>
+                  </div>
+                </th>
+                <th 
+                  class="px-4 py-3 text-left text-sm font-medium text-gray-700 cursor-pointer hover:text-blue-600 transition-colors"
+                  @click="sortColumn('price')"
                 >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  <span>Modifier</span>
-                </router-link>
-                <confirm-button 
-                  :delete-url="`/products/${product.productId}`" 
-                  :onSuccess="loadProducts"
-                  class="text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors"
-                />
-              </div>
-            </div>
-          </div>
+                  <div class="flex items-center space-x-1">
+                    <span>Prix</span>
+                    <svg v-if="sortKey === 'price'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortOrder === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                    </svg>
+                  </div>
+                </th>
+                <th 
+                  class="px-4 py-3 text-center text-sm font-medium text-gray-700 cursor-pointer hover:text-blue-600 transition-colors"
+                  @click="sortColumn('stock')"
+                >
+                  <div class="flex items-center justify-center space-x-1">
+                    <span>Stock</span>
+                    <svg v-if="sortKey === 'stock'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortOrder === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                    </svg>
+                  </div>
+                </th>
+                <th 
+                  class="px-4 py-3 text-center text-sm font-medium text-gray-700 cursor-pointer hover:text-blue-600 transition-colors"
+                  @click="sortColumn('category')"
+                >
+                  <div class="flex items-center justify-center space-x-1">
+                    <span>Catégorie</span>
+                    <svg v-if="sortKey === 'category'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortOrder === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                    </svg>
+                  </div>
+                </th>
+                <th 
+                  class="px-4 py-3 text-center text-sm font-medium text-gray-700 cursor-pointer hover:text-blue-600 transition-colors"
+                  @click="sortColumn('onSale')"
+                >
+                  <div class="flex items-center justify-center space-x-1">
+                    <span>En Vente</span>
+                    <svg v-if="sortKey === 'onSale'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortOrder === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                    </svg>
+                  </div>
+                </th>
+                <th class="px-4 py-3 text-center text-sm font-medium text-gray-700">Actions</th>
+              </tr>
+            </thead>
+
+            <!-- Corps du tableau -->
+            <tbody class="divide-y divide-gray-200/50">
+              <tr 
+                v-for="product in paginatedData" 
+                :key="product.productId"
+                class="hover:bg-blue-50/30 transition-colors"
+                :class="{ 'bg-blue-50/50': selectedProducts.includes(product.productId) }"
+              >
+                <!-- Checkbox -->
+                <td class="px-4 py-4">
+                  <input
+                    type="checkbox"
+                    :checked="selectedProducts.includes(product.productId)"
+                    @change="toggleProductSelection(product.productId)"
+                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                </td>
+                
+                <!-- Nom -->
+                <td class="px-4 py-4">
+                  <div class="font-medium text-gray-900">
+                    {{ product.name }}
+                  </div>
+                </td>
+                
+                <!-- Description -->
+                <td class="px-4 py-4">
+                  <div class="text-gray-600 text-sm max-w-xs truncate" :title="product.description">
+                    {{ product.description }}
+                  </div>
+                </td>
+                
+                <!-- Prix -->
+                <td class="px-4 py-4">
+                  <div class="font-semibold text-green-600">
+                    {{ (product.price / 100).toFixed(2) }} €
+                  </div>
+                </td>
+                
+                <!-- Stock -->
+                <td class="px-4 py-4 text-center">
+                  <span 
+                    class="px-2 py-1 text-xs rounded-full font-medium"
+                    :class="product.stock > 10 ? 'bg-green-100 text-green-800' : product.stock > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'"
+                  >
+                    {{ product.stock }}
+                  </span>
+                </td>
+                
+                <!-- Catégorie -->
+                <td class="px-4 py-4 text-center">
+                  <span class="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full font-medium">
+                    {{ product.category }}
+                  </span>
+                </td>
+                
+                <!-- En Vente -->
+                <td class="px-4 py-4 text-center">
+                  <span 
+                    class="px-2 py-1 text-xs rounded-full font-medium"
+                    :class="product.onSale ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'"
+                  >
+                    {{ product.onSale ? 'Oui' : 'Non' }}
+                  </span>
+                </td>
+                
+                <!-- Actions -->
+                <td class="px-4 py-4">
+                  <div class="flex items-center justify-center space-x-2">
+                    <router-link 
+                      :to="`/edit-product/${product.productId}`" 
+                      class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                      title="Modifier le produit"
+                    >
+                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Modifier
+                    </router-link>
+                    <button 
+                      @click="deleteProduct(product.productId)"
+                      class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                      title="Supprimer le produit"
+                    >
+                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Supprimer
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -347,6 +377,43 @@
             </button>
             <button 
               @click="confirmDeleteSelected"
+              :disabled="isDeleting"
+              class="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center space-x-2"
+            >
+              <svg v-if="isDeleting" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>{{ isDeleting ? 'Suppression...' : 'Supprimer' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de confirmation pour suppression individuelle -->
+    <div v-if="showSingleDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">Confirmer la suppression</h3>
+          <p class="text-gray-600 mb-6">
+            Êtes-vous sûr de vouloir supprimer ce produit ?
+            <br><span class="text-red-600 font-medium">Cette action est irréversible.</span>
+          </p>
+          <div class="flex justify-center space-x-4">
+            <button 
+              @click="showSingleDeleteModal = false"
+              class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+            >
+              Annuler
+            </button>
+            <button 
+              @click="confirmDeleteProduct"
               :disabled="isDeleting"
               class="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center space-x-2"
             >
@@ -394,6 +461,8 @@ export default defineComponent({
     const allSelected = ref<boolean>(false);
     const showDeleteModal = ref<boolean>(false);
     const isDeleting = ref<boolean>(false);
+    const showSingleDeleteModal = ref<boolean>(false);
+    const productToDelete = ref<number | null>(null);
 
     const sortedData = computed(() => {
       if (!products.value || products.value.length === 0) {
@@ -415,16 +484,46 @@ export default defineComponent({
         return [];
       }
       return sortedData.value.filter(product => {
-        return Object.keys(filters.value).every(key => {
-          const productValue = product[key as keyof Product];
-          const filterValue = filters.value[key as keyof typeof filters.value];
-          
-          if (productValue === undefined || productValue === null) {
-            return filterValue === '';
+        // Filtrage par nom
+        if (filters.value.name && !product.name.toLowerCase().includes(filters.value.name.toLowerCase())) {
+          return false;
+        }
+        
+        // Filtrage par description
+        if (filters.value.description && !product.description.toLowerCase().includes(filters.value.description.toLowerCase())) {
+          return false;
+        }
+        
+        // Filtrage par prix (conversion en euros pour la recherche)
+        if (filters.value.price) {
+          const productPriceInEuros = (product.price / 100).toFixed(2);
+          if (!productPriceInEuros.includes(filters.value.price)) {
+            return false;
           }
-          
-          return String(productValue).toLowerCase().includes(filterValue.toLowerCase());
-        });
+        }
+        
+        // Filtrage par stock
+        if (filters.value.stock) {
+          const stockFilter = filters.value.stock.toString();
+          if (!product.stock.toString().includes(stockFilter)) {
+            return false;
+          }
+        }
+        
+        // Filtrage par catégorie
+        if (filters.value.category && !product.category.toLowerCase().includes(filters.value.category.toLowerCase())) {
+          return false;
+        }
+        
+        // Filtrage par statut de vente
+        if (filters.value.onSale) {
+          const isOnSale = filters.value.onSale === 'true';
+          if (product.onSale !== isOnSale) {
+            return false;
+          }
+        }
+        
+        return true;
       });
     });
 
@@ -647,6 +746,38 @@ export default defineComponent({
       }
     };
 
+    const deleteProduct = (productId: number) => {
+      productToDelete.value = productId;
+      showSingleDeleteModal.value = true;
+    };
+
+    const confirmDeleteProduct = async () => {
+      if (!productToDelete.value) return;
+      
+      isDeleting.value = true;
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        const token = localStorage.getItem('token');
+        
+        await fetch(`${apiUrl}/products/${productToDelete.value}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        await loadProducts();
+        showSuccess('Suppression réussie', 'Le produit a été supprimé');
+      } catch (error) {
+        console.error('Erreur lors de la suppression du produit:', error);
+        showError('Erreur de suppression', 'Impossible de supprimer le produit');
+      } finally {
+        showSingleDeleteModal.value = false;
+        productToDelete.value = null;
+        isDeleting.value = false;
+      }
+    };
+
     onMounted(loadProducts);
 
     return {
@@ -672,7 +803,11 @@ export default defineComponent({
       toggleProductSelection,
       exportToCSV,
       deleteSelected,
-      confirmDeleteSelected
+      confirmDeleteSelected,
+      deleteProduct,
+      confirmDeleteProduct,
+      showSingleDeleteModal,
+      productToDelete
     };
   },
 });
@@ -701,6 +836,65 @@ button:disabled {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Styles responsive pour le tableau */
+@media (max-width: 1200px) {
+  /* Réduction de la grille des filtres sur tablette */
+  .grid.xl\\:grid-cols-6 {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Masquer certaines colonnes sur mobile */
+  table th:nth-child(3),
+  table td:nth-child(3) {
+    display: none;
+  }
+  
+  /* Réduire la taille des boutons sur mobile */
+  .inline-flex.items-center {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .inline-flex.items-center svg {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+  
+  /* Grille des filtres en 2 colonnes */
+  .grid.lg\\:grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Masquer plus de colonnes sur très petit écran */
+  table th:nth-child(6),
+  table td:nth-child(6),
+  table th:nth-child(7),
+  table td:nth-child(7) {
+    display: none;
+  }
+  
+  /* Affichage en mode compact */
+  .inline-flex.items-center {
+    padding: 0.25rem;
+    font-size: 0;
+  }
+  
+  .inline-flex.items-center svg {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+  }
+  
+  /* Grille des filtres en 1 colonne */
+  .grid.md\\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
   }
 }
 </style>

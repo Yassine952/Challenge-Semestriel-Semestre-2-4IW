@@ -199,21 +199,6 @@
             </div>
           </router-link>
 
-          <router-link 
-            to="/admin/orders" 
-            class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-          >
-            <div class="flex-shrink-0">
-              <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white">
-                📋
-              </div>
-            </div>
-            <div class="ml-4">
-              <p class="font-medium text-green-900">Voir les Commandes</p>
-              <p class="text-sm text-green-700">Suivi des commandes et livraisons</p>
-            </div>
-          </router-link>
-
           <button 
             @click="generateStockReport"
             class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
@@ -324,7 +309,7 @@ export default defineComponent({
 
       report += `DÉTAIL PAR PRODUIT:\n`;
       stockData.value.productsInfo.forEach((product: any) => {
-        const status = product.currentStock < 10 ? '⚠️ CRITIQUE' : '✅ OK';
+        const status = product.currentStock <= currentThreshold.value ? '⚠️ CRITIQUE' : '✅ OK';
         report += `- ${product.name}: ${product.currentStock} unités ${status}\n`;
       });
 
@@ -381,7 +366,7 @@ export default defineComponent({
         
         currentThreshold.value = newThreshold.value;
         
-        showSuccess('Configuration mise à jour', `Seuil de stock critique défini à ${newThreshold.value} unités (partagé avec tous les administrateurs)`);
+        showSuccess('Configuration mise à jour', `Seuil de stock critique défini à ${newThreshold.value} unités`);
         
         // Actualiser les données pour refléter le nouveau seuil
         if (stockChart.value && stockChart.value.loadStockEvolution) {

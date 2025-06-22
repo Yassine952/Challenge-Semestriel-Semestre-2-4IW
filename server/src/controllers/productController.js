@@ -113,30 +113,40 @@ export const updateProduct = async (req, res) => {
       console.log(`Prix final: ${updateData.price} centimes`);
     }
     
-    // 🔧 CORRECTION: Utiliser l'architecture hybride relative pour les modifications de stock
+    // 🔧 CORRECTION: Mise à jour ABSOLUE du stock au lieu de relative
     if (newStock !== undefined && newStock !== oldStock) {
-      const stockChange = newStock - oldStock;
-      const movementType = stockChange > 0 ? 'adjustment' : 'adjustment';
-      const reason = `Mise à jour produit: ${stockChange > 0 ? 'Augmentation' : 'Diminution'} de ${Math.abs(stockChange)} unités`;
+      console.log(`🔄 Mise à jour stock: ${oldStock} → ${newStock} (différence: ${newStock - oldStock})`);
       
       try {
-        await updateProductStockRelative(
-          productId,
-          stockChange, // Changement relatif de stock
-          req.user?.id || 1, // Fallback admin user
-          movementType,
-          reason,
-          `product-update-${Date.now()}`
-        );
-        console.log(`✅ Stock mis à jour via architecture hybride - Produit ${productId}: ${stockChange} unités`);
-      } catch (hybridError) {
-        console.error('❌ Erreur architecture hybride:', hybridError);
-        // Fallback : mise à jour manuelle
-        await product.update(updateData);
+        // 1. Mettre à jour directement dans PostgreSQL
+        await product.update({ ...updateData, stock: newStock });
+        
+        // 2. Mettre à jour dans MongoDB
         const mongoProduct = await ProductMongo.findOne({ productId });
         if (mongoProduct) {
-          await mongoProduct.updateOne(updateData);
+          await mongoProduct.updateOne({ ...updateData, stock: newStock });
         }
+        
+        // 3. Enregistrer le mouvement d'ajustement avec la différence réelle
+        const stockChange = newStock - oldStock;
+        await recordStockMovement({
+          productId: productId,
+          userId: req.user?.id || 1,
+          movementType: 'adjustment',
+          quantityChange: stockChange,
+          reason: `Mise à jour produit: Modification de ${oldStock} à ${newStock} unités`,
+          reference: `product-update-${Date.now()}`,
+          metadata: {
+            oldStock: oldStock,
+            newStock: newStock,
+            userEmail: req.user?.email
+          }
+        });
+        
+        console.log(`✅ Stock mis à jour (ABSOLU) - Produit ${productId}: ${oldStock} → ${newStock}`);
+      } catch (stockError) {
+        console.error('❌ Erreur mise à jour stock:', stockError);
+        throw stockError;
       }
     } else {
       // Pas de changement de stock, mise à jour classique

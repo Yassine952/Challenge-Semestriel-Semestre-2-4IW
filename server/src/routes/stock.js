@@ -99,87 +99,113 @@ router.get('/evolution-chart',
           startDate = new Date(now.getTime() - 5 * 60 * 1000);
       }
 
-      // Récupérer l'historique pour chaque produit
+      // 🔧 NOUVELLE LOGIQUE: Calcul intelligent de l'évolution des stocks
       const productEvolutions = await Promise.all(
         products.map(async (product) => {
           try {
-            // Récupérer l'historique des mouvements pour ce produit
-            const history = await StockHistoryMongo.find({
-              productId: product.productId,
-              createdAt: { $gte: startDate }
+            // 1. Récupérer TOUT l'historique du produit (pas seulement la période)
+            const allHistory = await StockHistoryMongo.find({
+              productId: product.productId
             }).sort({ createdAt: 1 });
 
-            // Créer une série de données avec les points d'évolution
-            const dataPoints = [];
+            // 2. Définir le nombre de points selon la période
+            const numberOfPoints = {
+              '5m': 6,
+              '1h': 7,
+              '1d': 8,
+              '1w': 7,
+              '1m': 10,
+              '3m': 12,
+              '6m': 15,
+              '1y': 20
+            }[period] || 10;
+
+            // 3. Créer les points de temps uniformément répartis
+            const timePoints = [];
+            const timeInterval = (now.getTime() - startDate.getTime()) / (numberOfPoints - 1);
             
-                        if (history.length === 0) {
-              // Pas d'historique, créer plusieurs points avec le stock constant
-              const numberOfPoints = period === '5m' ? 5 : period === '1h' ? 6 : 3;
-              const timeInterval = (now.getTime() - startDate.getTime()) / (numberOfPoints - 1);
-              
-              for (let i = 0; i < numberOfPoints; i++) {
-                const pointTime = new Date(startDate.getTime() + (timeInterval * i));
-                
-                // Tous les points ont le même stock (pas de variation simulée)
-                dataPoints.push({
-                  date: pointTime,
-                  stock: product.stock
-                });
-              }
-            } else {
-              // Utiliser l'historique
-              history.forEach(movement => {
-                dataPoints.push({
-                  date: movement.createdAt,
-                  stock: movement.quantityAfter
-                });
-              });
-              
-              // Ajouter le point actuel si différent du dernier
-              const lastMovement = history[history.length - 1];
-              if (lastMovement.quantityAfter !== product.stock) {
-                dataPoints.push({
-                  date: now,
-                  stock: product.stock
-                });
-              }
+            for (let i = 0; i < numberOfPoints; i++) {
+              timePoints.push(new Date(startDate.getTime() + (timeInterval * i)));
             }
+
+            // 4. Calculer le stock à chaque point de temps
+            const dataPoints = timePoints.map(pointTime => {
+              // Trouver le stock à ce moment précis en rejouant l'historique
+              let stockAtTime = 0;
+              
+              // Trouver le mouvement initial
+              const initialMovement = allHistory.find(m => m.movementType === 'initial');
+              if (initialMovement) {
+                // Si le point est après le stock initial, commencer par le stock initial
+                if (pointTime >= initialMovement.createdAt) {
+                  stockAtTime = initialMovement.quantityAfter;
+                  
+                  // Appliquer tous les mouvements entre le stock initial et ce point
+                  const movementsUntilPoint = allHistory.filter(m => 
+                    m.createdAt > initialMovement.createdAt && 
+                    m.createdAt <= pointTime &&
+                    m.movementType !== 'initial'
+                  );
+                  
+                  movementsUntilPoint.forEach(movement => {
+                    stockAtTime += movement.quantityChange;
+                  });
+                } else {
+                  // Point avant le stock initial = 0
+                  stockAtTime = 0;
+                }
+              } else {
+                // Pas de stock initial, calculer depuis le début
+                const movementsUntilPoint = allHistory.filter(m => m.createdAt <= pointTime);
+                stockAtTime = movementsUntilPoint.reduce((stock, movement) => {
+                  return stock + movement.quantityChange;
+                }, 0);
+              }
+
+              return {
+                date: pointTime,
+                stock: Math.max(0, stockAtTime) // Éviter les stocks négatifs dans l'affichage
+              };
+            });
+
+            console.log(`📊 ${product.name}: Généré ${dataPoints.length} points, stock actuel calculé: ${dataPoints[dataPoints.length - 1].stock}, stock DB: ${product.stock}`);
 
             return {
               productId: product.productId,
               productName: product.name,
               currentStock: product.stock,
-              dataPoints: dataPoints
+              dataPoints: dataPoints,
+              historyCount: allHistory.length
             };
           } catch (error) {
             console.warn(`⚠️ Erreur pour produit ${product.name}:`, error.message);
+            
+            // Fallback: créer des points avec le stock actuel
+            const numberOfPoints = 6;
+            const timeInterval = (now.getTime() - startDate.getTime()) / (numberOfPoints - 1);
+            const fallbackPoints = [];
+            
+            for (let i = 0; i < numberOfPoints; i++) {
+              fallbackPoints.push({
+                date: new Date(startDate.getTime() + (timeInterval * i)),
+                stock: product.stock
+              });
+            }
+            
             return {
               productId: product.productId,
               productName: product.name,
               currentStock: product.stock,
-              dataPoints: [{
-                date: now,
-                stock: product.stock
-              }]
+              dataPoints: fallbackPoints,
+              historyCount: 0
             };
           }
         })
       );
 
-      // Créer un ensemble unifié de dates pour l'axe X
-      const allDates = new Set();
-      productEvolutions.forEach(product => {
-        product.dataPoints.forEach(point => {
-          // Pour les périodes courtes, inclure l'heure et minute
-          if (period === '5m' || period === '1h' || period === '1d') {
-            allDates.add(point.date.toISOString().slice(0, 16)); // Format YYYY-MM-DDTHH:MM
-          } else {
-            allDates.add(point.date.toISOString().split('T')[0]); // Format YYYY-MM-DD
-          }
-        });
-      });
-      
-      const sortedDates = Array.from(allDates).sort();
+      // 🔧 NOUVELLE LOGIQUE SIMPLIFIÉE: Tous les produits ont les mêmes points de temps
+      // Utiliser les points de temps du premier produit comme référence
+      const referencePoints = productEvolutions[0]?.dataPoints || [];
       
       // Couleurs pour chaque produit
       const colors = [
@@ -197,32 +223,8 @@ router.get('/evolution-chart',
       const datasets = productEvolutions.map((product, index) => {
         const color = colors[index % colors.length];
         
-        // Mapper les données sur les dates communes sans trous
-        const data = [];
-        let lastKnownStock = null; // ✅ Initialiser à null pour éviter la duplication
-        
-        for (let i = 0; i < sortedDates.length; i++) {
-          const date = sortedDates[i];
-          const dataPoint = product.dataPoints.find(point => {
-            if (period === '5m' || period === '1h' || period === '1d') {
-              return point.date.toISOString().slice(0, 16) === date;
-            } else {
-              return point.date.toISOString().split('T')[0] === date;
-            }
-          });
-          
-          if (dataPoint) {
-            data.push(dataPoint.stock);
-            lastKnownStock = dataPoint.stock;
-          } else if (lastKnownStock !== null) {
-            // Utiliser la dernière valeur connue pour éviter les trous (seulement si on en a une)
-            data.push(lastKnownStock);
-          } else {
-            // Si on n'a pas encore de valeur connue, utiliser le stock actuel
-            data.push(product.currentStock);
-            lastKnownStock = product.currentStock;
-          }
-        }
+        // Extraire directement les valeurs de stock
+        const data = product.dataPoints.map(point => point.stock);
 
         return {
           label: product.productName,
@@ -238,8 +240,8 @@ router.get('/evolution-chart',
       });
 
       // Formater les dates pour l'affichage selon la période
-      const labels = sortedDates.map(date => {
-        const dateObj = new Date(date);
+      const labels = referencePoints.map(point => {
+        const dateObj = point.date;
         if (period === '5m') {
           // Pour 5 minutes, afficher heure:minute:seconde
           return dateObj.toLocaleTimeString('fr-FR', { 
@@ -263,20 +265,14 @@ router.get('/evolution-chart',
       });
 
       // 🔍 DEBUG: Afficher les données pour diagnostic
-      console.log('\n🔍 DEBUG - Données des produits :');
+      console.log('\n🔍 DEBUG - Évolution des stocks calculée :');
       productEvolutions.forEach(product => {
-        console.log(`📦 ${product.productName}:`);
-        console.log(`   Stock actuel: ${product.currentStock}`);
-        console.log(`   Points de données: ${product.dataPoints.length}`);
-        product.dataPoints.forEach((point, index) => {
-          console.log(`   Point ${index + 1}: ${point.stock} unités à ${point.date.toISOString().slice(11, 19)}`);
-        });
+        console.log(`📦 ${product.productName} (${product.historyCount} mouvements):`);
+        console.log(`   Stock DB: ${product.currentStock} | Stock calculé final: ${product.dataPoints[product.dataPoints.length - 1]?.stock}`);
+        console.log(`   Évolution: ${product.dataPoints.map(p => p.stock).join(' → ')}`);
       });
 
-      console.log('\n🎨 DEBUG - Datasets générés :');
-      datasets.forEach(dataset => {
-        console.log(`📊 ${dataset.label}: [${dataset.data.join(', ')}]`);
-      });
+      console.log(`\n📊 Graphique: ${datasets.length} produits × ${labels.length} points de temps (période: ${period})`);
 
       const chartData = {
         labels: labels,

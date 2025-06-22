@@ -46,10 +46,26 @@ export const recordStockMovement = async ({
       throw new Error('Produit non trouvé');
     }
 
-    // ✅ Pour le stock initial, quantityBefore doit être 0, pas le stock actuel
-    const quantityBefore = movementType === 'initial' ? 0 : product.stock;
-    const quantityAfter = quantityBefore + quantityChange;
+    // ✅ Logique améliorée pour calculer quantityBefore et quantityAfter
+    let quantityBefore, quantityAfter;
+    
+    if (movementType === 'initial') {
+      // Stock initial : avant = 0, après = stock initial
+      quantityBefore = 0;
+      quantityAfter = quantityChange; // quantityChange contient le stock initial
+    } else if (movementType === 'adjustment' && metadata?.oldStock !== undefined) {
+      // Ajustement avec stock précédent connu
+      quantityBefore = metadata.oldStock;
+      quantityAfter = metadata.newStock || (quantityBefore + quantityChange);
+    } else {
+      // Mouvement normal (vente, achat, etc.)
+      quantityBefore = product.stock;
+      quantityAfter = quantityBefore + quantityChange;
+    }
+    
     const totalValue = cost ? Math.abs(quantityChange) * cost : null;
+    
+    console.log(`📊 Mouvement ${movementType}: ${quantityBefore} → ${quantityAfter} (${quantityChange > 0 ? '+' : ''}${quantityChange})`);
 
     // 2. Préparer les données
     const stockData = {
@@ -321,6 +337,16 @@ export const getGlobalStockEvolution = async (period = '3m') => {
     console.log('📊 Lecture évolution globale depuis MongoDB - Version simplifiée');
     
     // 🔥 SOLUTION DIRECTE: Calculer le stock total actuel de tous les produits
+    // 🔍 DEBUG: D'abord récupérer tous les produits pour voir les stocks individuels
+    const allProducts = await ProductMongo.find({}, { productId: 1, name: 1, stock: 1 });
+    console.log('🔍 DEBUG - Tous les produits MongoDB:');
+    allProducts.forEach(product => {
+      console.log(`   - ${product.name} (ID: ${product.productId}): ${product.stock} unités`);
+      if (product.stock < 0) {
+        console.log(`   ⚠️ STOCK NÉGATIF DÉTECTÉ: ${product.name} = ${product.stock}`);
+      }
+    });
+    
     const currentStockResult = await ProductMongo.aggregate([
       {
         $group: {
@@ -328,7 +354,12 @@ export const getGlobalStockEvolution = async (period = '3m') => {
           totalStock: { $sum: '$stock' },
           productCount: { $sum: 1 },
           minStock: { $min: '$stock' },
-          maxStock: { $max: '$stock' }
+          maxStock: { $max: '$stock' },
+          negativeStockCount: {
+            $sum: {
+              $cond: [{ $lt: ['$stock', 0] }, 1, 0]
+            }
+          }
         }
       }
     ]);
@@ -344,6 +375,12 @@ export const getGlobalStockEvolution = async (period = '3m') => {
 
     const currentData = currentStockResult[0];
     console.log('📊 Stock actuel calculé:', currentData);
+    
+    if (currentData.negativeStockCount > 0) {
+      console.log(`⚠️ ATTENTION: ${currentData.negativeStockCount} produit(s) avec stock négatif !`);
+      console.log(`   Stock minimum: ${currentData.minStock}`);
+      console.log(`   Stock maximum: ${currentData.maxStock}`);
+    }
 
     // Essayer de récupérer l'historique pour créer une évolution
     try {

@@ -109,15 +109,13 @@
       </div>
     </form>
 
-    <!-- Messages de statut -->
-    <div v-if="message" :class="messageClass" class="p-4 rounded-md mt-4">
-      {{ message }}
-    </div>
+
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue';
+import { useNotifications } from '../composables/useNotifications';
 
 interface AlertPreferences {
   alertNewProducts: boolean;
@@ -130,6 +128,8 @@ interface AlertPreferences {
 export default defineComponent({
   name: 'UserAlertPreferences',
   setup() {
+    const { showSuccess, showError, showInfo } = useNotifications();
+    
     const preferences = ref<AlertPreferences>({
       alertNewProducts: true,
       alertRestock: true,
@@ -148,8 +148,6 @@ export default defineComponent({
     
     const availableCategories = ref<string[]>([]);
     const isSaving = ref(false);
-    const message = ref('');
-    const messageClass = ref('');
 
     const loadPreferences = async () => {
       try {
@@ -167,7 +165,7 @@ export default defineComponent({
         preferences.value = { ...data };
         originalPreferences.value = { ...data };
       } catch (error: any) {
-        showMessage(error.message || 'Erreur lors du chargement des préférences', 'error');
+        showError('Erreur de chargement', error.message || 'Erreur lors du chargement des préférences');
       }
     };
 
@@ -186,7 +184,7 @@ export default defineComponent({
         const categories = await response.json();
         availableCategories.value = categories;
       } catch (error: any) {
-        showMessage(error.message || 'Erreur lors du chargement des catégories', 'error');
+        showError('Erreur de chargement', error.message || 'Erreur lors du chargement des catégories');
       }
     };
 
@@ -208,9 +206,9 @@ export default defineComponent({
 
         const data = await response.json();
         originalPreferences.value = { ...preferences.value };
-        showMessage(data.message, 'success');
+        showSuccess('Préférences mises à jour', data.message || 'Vos préférences ont été sauvegardées avec succès');
       } catch (error: any) {
-        showMessage(error.message || 'Erreur lors de la sauvegarde des préférences', 'error');
+        showError('Erreur de sauvegarde', error.message || 'Erreur lors de la sauvegarde des préférences');
       } finally {
         isSaving.value = false;
       }
@@ -218,20 +216,7 @@ export default defineComponent({
 
     const resetPreferences = () => {
       preferences.value = { ...originalPreferences.value };
-      showMessage('Préférences réinitialisées', 'info');
-    };
-
-    const showMessage = (msg: string, type: 'success' | 'error' | 'info') => {
-      message.value = msg;
-      messageClass.value = type === 'success' 
-        ? 'bg-green-100 text-green-800 border border-green-200'
-        : type === 'error'
-        ? 'bg-red-100 text-red-800 border border-red-200'
-        : 'bg-blue-100 text-blue-800 border border-blue-200';
-      
-      setTimeout(() => {
-        message.value = '';
-      }, 5000);
+      showInfo('Préférences réinitialisées', 'Vos préférences ont été restaurées aux valeurs précédentes');
     };
 
     onMounted(() => {
@@ -243,8 +228,6 @@ export default defineComponent({
       preferences,
       availableCategories,
       isSaving,
-      message,
-      messageClass,
       savePreferences,
       resetPreferences
     };

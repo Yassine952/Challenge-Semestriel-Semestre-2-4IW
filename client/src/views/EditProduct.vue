@@ -64,16 +64,7 @@
             />
             <span v-if="categoryError" class="text-red-500">{{ categoryError }}</span>
           </div>
-          <div>
-            <label for="brand" class="font-medium">Marque</label>
-            <input
-              type="text"
-              v-model="brand"
-              @input="handleChange('brand', $event.target.value)"
-              class="w-full mt-2 px-3 py-2 text-gray-500 bg-transparent outline-none border focus:border-indigo-600 shadow-sm rounded-lg"
-            />
-            <span v-if="brandError" class="text-red-500">{{ brandError }}</span>
-          </div>
+
           <div class="flex items-center">
             <input
               type="checkbox"
@@ -114,7 +105,6 @@ const productSchema = z.object({
   price: z.number().min(0, 'Le prix doit être un nombre positif'),
   stock: z.number().min(0, 'Le stock doit être un nombre positif'),
   category: z.string().min(1, 'Catégorie est requise'),
-  brand: z.string().optional(),
   onSale: z.boolean().optional(),
 });
 
@@ -132,14 +122,12 @@ export default defineComponent({
       price,
       stock,
       category,
-      brand,
       onSale,
       nameError,
       descriptionError,
       priceError,
       stockError,
       categoryError,
-      brandError,
       onSaleError,
       isSubmitting,
       serverError,
@@ -152,7 +140,6 @@ export default defineComponent({
         price: 0,
         stock: 0,
         category: '',
-        brand: '',
         onSale: false,
       },
       schema: productSchema,
@@ -180,7 +167,6 @@ export default defineComponent({
         handleChange('price', response.price / 100); // Afficher en euros pour l'utilisateur
         handleChange('stock', response.stock);
         handleChange('category', response.category);
-        handleChange('brand', response.brand || '');
         handleChange('onSale', response.onSale);
       } catch (error) {
         console.error('Erreur lors de la récupération du produit:', error);
@@ -196,14 +182,12 @@ export default defineComponent({
       price,
       stock,
       category,
-      brand,
       onSale,
       nameError,
       descriptionError,
       priceError,
       stockError,
       categoryError,
-      brandError,
       onSaleError,
       isSubmitting,
       serverError,
