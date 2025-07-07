@@ -141,7 +141,7 @@
             Modifier
           </router-link>
           <button
-            @click="deletePromotionHandler(promotion.promotionId)"
+            @click="deletePromotion(promotion.promotionId)"
             class="px-3 py-1 text-red-600 hover:text-red-800 text-sm font-medium"
           >
             Supprimer
@@ -150,25 +150,61 @@
       </div>
     </div>
 
-
+    <!-- Modal de confirmation pour suppression -->
+    <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">Confirmer la suppression</h3>
+          <p class="text-gray-600 mb-6">
+            Êtes-vous sûr de vouloir supprimer cette promotion ?
+            <br><span class="text-red-600 font-medium">Cette action est irréversible.</span>
+          </p>
+          <div class="flex justify-center space-x-4">
+            <button 
+              @click="showDeleteModal = false"
+              class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+            >
+              Annuler
+            </button>
+            <button 
+              @click="confirmDeletePromotion"
+              :disabled="isDeleting"
+              class="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center space-x-2"
+            >
+              <svg v-if="isDeleting" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>{{ isDeleting ? 'Suppression...' : 'Supprimer' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, onMounted, computed } from 'vue';
-import { fetchPromotions, deletePromotion } from '../services/promotionService';
+import { fetchPromotions, deletePromotion as deletePromotionService } from '../services/promotionService';
 import { Promotion } from '../types/Promotion';
 import { useNotifications } from '../composables/useNotifications';
 
 export default defineComponent({
   name: 'PromotionList',
   setup() {
-    const { addNotification } = useNotifications();
+    const { showSuccess, showError } = useNotifications();
     const promotions = ref<Promotion[]>([]);
     const isLoading = ref(true);
     const filterType = ref<'all' | 'active' | 'expired'>('all');
-
-
+    const showDeleteModal = ref(false);
+    const isDeleting = ref(false);
+    const promotionToDelete = ref<number | null>(null);
 
     const activePromotions = computed(() => {
       const now = new Date();
@@ -200,27 +236,33 @@ export default defineComponent({
         isLoading.value = true;
         promotions.value = await fetchPromotions();
       } catch (error: any) {
-        addNotification(error.message || 'Erreur lors du chargement des promotions', 'error');
+        showError('Erreur de chargement', error.message || 'Erreur lors du chargement des promotions');
       } finally {
         isLoading.value = false;
       }
     };
 
-    const deletePromotionHandler = async (id: number) => {
-      if (!confirm('Êtes-vous sûr de vouloir supprimer cette promotion ?')) {
-        return;
-      }
-
-      try {
-        await deletePromotion(id);
-        await loadPromotions();
-        addNotification('Promotion supprimée avec succès', 'success');
-      } catch (error: any) {
-        addNotification(error.message || 'Erreur lors de la suppression', 'error');
-      }
+    const deletePromotion = (id: number) => {
+      promotionToDelete.value = id;
+      showDeleteModal.value = true;
     };
 
-
+    const confirmDeletePromotion = async () => {
+      if (!promotionToDelete.value) return;
+      
+      isDeleting.value = true;
+      try {
+        await deletePromotionService(promotionToDelete.value);
+        await loadPromotions();
+        showSuccess('Suppression réussie', 'La promotion a été supprimée avec succès');
+      } catch (error: any) {
+        showError('Erreur de suppression', error.message || 'Erreur lors de la suppression de la promotion');
+      } finally {
+        showDeleteModal.value = false;
+        promotionToDelete.value = null;
+        isDeleting.value = false;
+      }
+    };
 
     const formatDate = (dateString: string) => {
       return new Date(dateString).toLocaleDateString('fr-FR');
@@ -280,7 +322,10 @@ export default defineComponent({
       activePromotions,
       expiredPromotions,
       filteredPromotions,
-      deletePromotionHandler,
+      showDeleteModal,
+      isDeleting,
+      deletePromotion,
+      confirmDeletePromotion,
       formatDate,
       getStatusClass,
       getStatusText,

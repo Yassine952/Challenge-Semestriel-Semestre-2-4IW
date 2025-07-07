@@ -9,9 +9,9 @@ import {
 
 const router = express.Router();
 
-// Toutes les routes nécessitent l'authentification et le rôle COMPTA
+// Toutes les routes nécessitent l'authentification et le rôle COMPTA ou ADMIN
 router.use(authenticateToken);
-router.use(authorize('ROLE_COMPTA'));
+router.use(authorize(['ROLE_COMPTA', 'ROLE_ADMIN']));
 
 // Obtenir les statistiques financières
 router.get('/stats', getFinancialStats);

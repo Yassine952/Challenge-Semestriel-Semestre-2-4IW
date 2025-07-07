@@ -7,4 +7,5 @@ export interface Product {
   category: string;
   brand?: string;
   onSale: boolean;
+  imageUrl?: string;
 }

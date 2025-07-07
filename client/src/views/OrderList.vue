@@ -3,12 +3,11 @@
     <h1 class="text-3xl font-bold mb-6">Mes Commandes</h1>
     
     <div v-if="orders.length > 0" class="space-y-6">
-      <div v-for="order in orders" :key="order.id" class="bg-white shadow-md rounded-lg p-6 border">
+      <div v-for="order in orders" :key="order._id" class="bg-white shadow-md rounded-lg p-6 border">
         <div class="flex justify-between items-start mb-4">
           <div>
-            <h3 class="text-xl font-semibold">Commande #{{ order.id }}</h3>
+            <h3 class="text-xl font-semibold">Commande #{{ order.orderId }}</h3>
             <p class="text-gray-600">{{ formatDate(order.createdAt) }}</p>
-            <p class="text-lg font-medium">{{ order.totalAmount }} €</p>
           </div>
           <div class="text-right">
             <span :class="getStatusClass(order.status)" class="px-3 py-1 rounded-full text-sm font-medium">
@@ -22,16 +21,32 @@
           </div>
         </div>
 
-
         <div v-if="order.OrderItems && order.OrderItems.length > 0" class="mb-4">
           <h4 class="font-medium mb-2">Articles:</h4>
           <ul class="space-y-1">
-            <li v-for="item in order.OrderItems" :key="item.id" class="text-sm text-gray-600">
-              {{ item.quantity }}x {{ item.productName }} - {{ item.price }} €
+            <li v-for="item in order.OrderItems" :key="item.productId" class="text-sm text-gray-600">
+              {{ item.quantity }}x {{ item.productName }} - {{ formatPrice(item.productPrice) }} €
             </li>
           </ul>
         </div>
 
+        <!-- Affichage du résumé des prix -->
+        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+          <div class="space-y-2">
+            <div v-if="order.originalAmount && order.promoCode" class="flex justify-between text-sm">
+              <span>Sous-total:</span>
+              <span>{{ formatPrice(order.originalAmount * 100) }} €</span>
+            </div>
+            <div v-if="order.promoCode && order.promoDiscount > 0" class="flex justify-between text-sm text-green-600">
+              <span>Code promo ({{ order.promoCode }}):</span>
+              <span>-{{ formatPrice(order.promoDiscount * 100) }} €</span>
+            </div>
+            <div class="flex justify-between font-semibold text-lg border-t pt-2">
+              <span>Total:</span>
+              <span>{{ formatPrice(order.totalAmount * 100) }} €</span>
+            </div>
+          </div>
+        </div>
 
         <div class="flex flex-wrap gap-3">
           <button 
@@ -63,45 +78,47 @@
 
     <p v-else class="text-center text-gray-500 text-lg">Aucune commande trouvée.</p>
 
+    <!-- Modal de retour -->
+    <div v-if="showReturnModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+      <div class="min-h-screen px-4 text-center">
+        <!-- Élément invisible pour centrer verticalement -->
+        <div class="inline-block h-screen align-middle" aria-hidden="true">&#8203;</div>
+        <!-- Modal -->
+        <div class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg">
+          <h3 class="text-xl font-semibold mb-4">Demande de retour</h3>
+          <p class="text-gray-600 mb-4">Commande #{{ selectedOrder?.orderId }}</p>
+          
+          <div class="mb-4">
+            <label for="returnReason" class="block text-sm font-medium text-gray-700 mb-2">
+              Raison du retour:
+            </label>
+            <textarea
+              id="returnReason"
+              v-model="returnReason"
+              rows="4"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Expliquez la raison de votre demande de retour..."
+            ></textarea>
+          </div>
 
-    <div v-if="showReturnModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <h3 class="text-xl font-semibold mb-4">Demande de retour</h3>
-        <p class="text-gray-600 mb-4">Commande #{{ selectedOrder?.orderId }}</p>
-        
-        <div class="mb-4">
-          <label for="returnReason" class="block text-sm font-medium text-gray-700 mb-2">
-            Raison du retour:
-          </label>
-          <textarea
-            id="returnReason"
-            v-model="returnReason"
-            rows="4"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Expliquez la raison de votre demande de retour..."
-          ></textarea>
-        </div>
-
-        <div class="flex justify-end space-x-3">
-          <button 
-            @click="closeReturnModal"
-            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-          >
-            Annuler
-          </button>
-          <button 
-            @click="submitReturn"
-            :disabled="!returnReason.trim() || isSubmittingReturn"
-            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors"
-          >
-            {{ isSubmittingReturn ? 'Envoi...' : 'Confirmer le retour' }}
-          </button>
+          <div class="flex justify-end space-x-3">
+            <button 
+              @click="closeReturnModal"
+              class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+            >
+              Annuler
+            </button>
+            <button 
+              @click="submitReturn"
+              :disabled="!returnReason.trim() || isSubmittingReturn"
+              class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors"
+            >
+              {{ isSubmittingReturn ? 'Envoi...' : 'Confirmer le retour' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
-
-
-
   </div>
 </template>
 
@@ -115,12 +132,16 @@ interface Order {
   orderId: number;
   createdAt: string;
   totalAmount: number;
+  originalAmount?: number;
+  promoCode?: string;
+  promoDiscount?: number;
   status: string;
   returnRequested: boolean;
   returnStatus: string | null;
   OrderItems?: Array<{
-    id: number;
+    productId: number;
     productName: string;
+    productPrice: number;
     quantity: number;
     price: number;
   }>;
@@ -153,6 +174,10 @@ export default defineComponent({
         hour: '2-digit',
         minute: '2-digit'
       });
+    };
+
+    const formatPrice = (priceInCents: number) => {
+      return (priceInCents / 100).toFixed(2);
     };
 
     const getStatusClass = (status: string) => {
@@ -245,6 +270,7 @@ export default defineComponent({
       isReordering,
       downloadInvoice,
       formatDate,
+      formatPrice,
       getStatusClass,
       getReturnStatusClass,
       canRequestReturn,

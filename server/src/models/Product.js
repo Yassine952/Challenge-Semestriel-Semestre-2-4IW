@@ -28,6 +28,11 @@ const Product = sequelize.define('Product', {
   onSale: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
+  },
+  imageUrl: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'URL ou chemin vers l\'image du produit'
   }
 });
 

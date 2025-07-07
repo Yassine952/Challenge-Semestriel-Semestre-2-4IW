@@ -1,7 +1,7 @@
 <template>
   <div v-if="showBanner" class="fixed bottom-0 left-0 w-full bg-gray-800 text-white p-4 shadow-lg flex items-center justify-between z-50">
     <p class="text-sm">
-      Nous utilisons des cookies pour améliorer votre expérience sur notre site. 
+      Nous utilisons uniquement des cookies essentiels pour le fonctionnement du site et le traitement des paiements sécurisés via Stripe. 
       <router-link to="/privacy-policy" class="underline text-indigo-400 ml-1">En savoir plus</router-link>.
     </p>
     <div class="flex space-x-2">

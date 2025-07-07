@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import { indexRouter } from './routes/index.js';
 import authRouter from './routes/auth.js';
 import productRouter from './routes/product.js';
@@ -29,6 +30,9 @@ server.use(cors());
 
 server.post('/api/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
 server.use(express.json());
+
+// Servir les images statiques
+server.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 connectMongoDB();
 

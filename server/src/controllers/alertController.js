@@ -249,6 +249,10 @@ export const sendPriceChangeAlert = async (product, oldPrice, newPrice) => {
     const isIncrease = priceChange > 0;
     const changePercent = Math.abs((priceChange / oldPrice) * 100).toFixed(1);
 
+    // Convertir les prix de centimes en euros pour l'affichage
+    const oldPriceEuros = (oldPrice / 100).toFixed(2);
+    const newPriceEuros = (newPrice / 100).toFixed(2);
+
     const emailPromises = filteredUsers.map(user => {
       const mailOptions = {
         from: process.env.EMAIL_USER,
@@ -264,11 +268,11 @@ export const sendPriceChangeAlert = async (product, oldPrice, newPrice) => {
               <p style="color: #6b7280;">${product.description}</p>
               <div style="margin: 15px 0;">
                 <div style="margin-bottom: 10px;">
-                  <span style="color: #6b7280; text-decoration: line-through;">Ancien prix: ${oldPrice}€</span>
+                  <span style="color: #6b7280; text-decoration: line-through;">Ancien prix: ${oldPriceEuros}€</span>
                 </div>
                 <div>
                   <span style="background: ${isIncrease ? '#dc2626' : '#059669'}; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold;">
-                    Nouveau prix: ${newPrice}€
+                    Nouveau prix: ${newPriceEuros}€
                   </span>
                   <span style="margin-left: 10px; color: ${isIncrease ? '#dc2626' : '#059669'}; font-weight: bold;">
                     ${isIncrease ? '+' : '-'}${changePercent}%
@@ -301,15 +305,15 @@ export const sendPriceChangeAlert = async (product, oldPrice, newPrice) => {
 
     await Promise.all(emailPromises);
     
-    // Enregistrer l'historique pour chaque utilisateur
+    // Enregistrer l'historique pour chaque utilisateur avec les prix en euros
     const historyPromises = filteredUsers.map(user => 
       saveAlertHistory(
         user.id, 
         product.id, 
         'price_change', 
         `💰 ${isIncrease ? 'Augmentation' : 'Baisse'} de prix - ${product.name}`,
-        `Le prix du produit "${product.name}" est passé de ${oldPrice}€ à ${newPrice}€ (${isIncrease ? '+' : '-'}${changePercent}%).`,
-        { productName: product.name, oldPrice, newPrice, changePercent, isIncrease }
+        `Le prix du produit "${product.name}" est passé de ${oldPriceEuros}€ à ${newPriceEuros}€ (${isIncrease ? '+' : '-'}${changePercent}%).`,
+        { productName: product.name, oldPrice: oldPriceEuros, newPrice: newPriceEuros, changePercent, isIncrease }
       )
     );
     await Promise.all(historyPromises);

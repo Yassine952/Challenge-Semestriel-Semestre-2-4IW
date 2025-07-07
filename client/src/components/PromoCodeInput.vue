@@ -2,6 +2,38 @@
   <div class="promo-code-section bg-gray-50 p-4 rounded-lg">
     <h3 class="text-lg font-medium mb-4 text-gray-800">🎫 Code Promo</h3>
     
+    <!-- Codes promo disponibles -->
+    <div v-if="availablePromos.length > 0 && !appliedPromo" class="mb-4">
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Codes promo disponibles :</h4>
+      <div class="space-y-2">
+        <div 
+          v-for="promo in availablePromos" 
+          :key="promo.code"
+          class="flex items-center justify-between bg-white border border-gray-200 rounded-md p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+          @click="selectPromo(promo.code)"
+        >
+          <div class="flex-1">
+            <div class="flex items-center space-x-2">
+              <span class="font-mono text-sm font-semibold text-blue-600">{{ promo.code }}</span>
+              <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                {{ formatDiscountValue(promo) }}
+              </span>
+            </div>
+            <p class="text-xs text-gray-600 mt-1">{{ promo.description }}</p>
+            <p v-if="promo.minOrderAmount" class="text-xs text-gray-500">
+              Minimum {{ promo.minOrderAmount }}€
+            </p>
+          </div>
+          <button 
+            class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            @click.stop="selectPromo(promo.code)"
+          >
+            Utiliser
+          </button>
+        </div>
+      </div>
+    </div>
+    
     <!-- Formulaire de saisie -->
     <div v-if="!appliedPromo" class="space-y-3">
       <div class="flex space-x-2">
@@ -76,8 +108,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, watch } from 'vue';
-import { validatePromoCode } from '../services/promotionService';
+import { defineComponent, ref, computed, watch, onMounted } from 'vue';
+import { validatePromoCode, fetchPromotions } from '../services/promotionService';
 import { PromoValidationResult } from '../types/Promotion';
 
 export default defineComponent({
@@ -100,10 +132,33 @@ export default defineComponent({
     const discountAmount = ref(0);
     const errorMessage = ref('');
     const successMessage = ref('');
+    const availablePromos = ref<any[]>([]);
 
     const finalTotal = computed(() => {
       return Math.max(0, props.cartTotal - discountAmount.value);
     });
+
+    const loadAvailablePromos = async () => {
+      try {
+        const promos = await fetchPromotions({ active: true });
+        availablePromos.value = promos;
+      } catch (error) {
+        console.error('Erreur lors du chargement des promotions:', error);
+      }
+    };
+
+    const selectPromo = (code: string) => {
+      promoCode.value = code;
+      validatePromo();
+    };
+
+    const formatDiscountValue = (promo: any) => {
+      if (promo.discountType === 'percentage') {
+        return `${promo.discountValue}%`;
+      } else {
+        return `${promo.discountValue}€`;
+      }
+    };
 
     const validatePromo = async () => {
       if (!promoCode.value.trim()) return;
@@ -172,6 +227,11 @@ export default defineComponent({
       }
     });
 
+    // Charger les promotions disponibles au montage
+    onMounted(() => {
+      loadAvailablePromos();
+    });
+
     return {
       promoCode,
       isValidating,
@@ -180,9 +240,12 @@ export default defineComponent({
       errorMessage,
       successMessage,
       finalTotal,
+      availablePromos,
       validatePromo,
       removePromo,
-      formatDiscount
+      formatDiscount,
+      selectPromo,
+      formatDiscountValue
     };
   }
 });

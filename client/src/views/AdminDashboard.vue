@@ -20,7 +20,7 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Navigation rapide -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
         <router-link 
           to="/stock-dashboard" 
           class="group p-6 bg-white/80 backdrop-blur-xl rounded-2xl border border-white/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
@@ -51,6 +51,23 @@
             <div>
               <h3 class="font-semibold text-gray-900">Analytics</h3>
               <p class="text-sm text-gray-600">Statistiques & rapports</p>
+            </div>
+          </div>
+        </router-link>
+
+        <router-link 
+          to="/compta-dashboard" 
+          class="group p-6 bg-white/80 backdrop-blur-xl rounded-2xl border border-white/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+        >
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+              <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-900">Comptabilité</h3>
+              <p class="text-sm text-gray-600">Dashboard comptable</p>
             </div>
           </div>
         </router-link>
@@ -308,28 +325,6 @@
             <div>
               <h2 class="text-xl font-semibold text-gray-900">Gestion des Commandes</h2>
               <p class="text-gray-600 text-sm mt-1">{{ orders.length }} commande(s) au total</p>
-            </div>
-            <div class="flex items-center space-x-4">
-              <select 
-                v-model="orderStatusFilter"
-                @change="filterOrders"
-                class="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              >
-                <option value="">Tous les statuts</option>
-                <option value="Pending">En attente</option>
-                <option value="Completed">Terminées</option>
-                <option value="Cancelled">Annulées</option>
-              </select>
-              <select 
-                v-model="returnStatusFilter"
-                @change="filterOrders"
-                class="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              >
-                <option value="">Tous les retours</option>
-                <option value="Requested">Retour demandé</option>
-                <option value="Approved">Retour approuvé</option>
-                <option value="Denied">Retour refusé</option>
-              </select>
             </div>
           </div>
         </div>

@@ -291,9 +291,13 @@ const generateInvoicePDF = async (order, user, promoInfo = null) => {
   
   let subtotal = 0;
   order.OrderItems.forEach(item => {
-    const itemTotal = item.price;
-    subtotal += itemTotal;
-    doc.fontSize(12).text(`${item.quantity} x ${item.productName} - ${item.productPrice}€ = ${itemTotal}€`);
+    // Utiliser le prix original du produit (AVANT promotion)
+    const unitPriceEuros = (item.productPrice / 100).toFixed(2);
+    const lineTotalEuros = (item.productPrice * item.quantity / 100).toFixed(2);
+    subtotal += item.productPrice * item.quantity; // Sous-total AVANT promotion en centimes
+    
+    // Afficher : quantité x nom - prix total de la ligne AVANT promotion
+    doc.fontSize(12).text(`${item.quantity} x ${item.productName} - ${lineTotalEuros}€`);
   });
   
   doc.moveDown();
@@ -301,18 +305,28 @@ const generateInvoicePDF = async (order, user, promoInfo = null) => {
   
   // Calculs avec promotion
   if (promoInfo && promoInfo.promoCode && promoInfo.promoDiscount > 0) {
-    doc.text(`Sous-total: ${promoInfo.originalAmount}€`);
-    doc.text(`Code promo (${promoInfo.promoCode}): -${promoInfo.promoDiscount}€`, { 
+    // subtotal est en centimes (prix AVANT promotion)
+    // order.totalAmount, promoInfo.promoDiscount et promoInfo.originalAmount sont en euros
+    const subtotalEuros = (subtotal / 100).toFixed(2);
+    const totalAmountEuros = order.totalAmount.toFixed(2);
+    
+    // promoInfo.promoDiscount est déjà en euros
+    const promoDiscountEuros = promoInfo.promoDiscount.toFixed(2);
+    
+    doc.text(`Sous-total: ${subtotalEuros}€`);
+    doc.text(`Code promo (${promoInfo.promoCode}): -${promoDiscountEuros}€`, { 
       fillColor: 'green' 
     });
     doc.fillColor('black');
     doc.moveDown(0.5);
-    doc.fontSize(16).text(`TOTAL: ${order.totalAmount}€`, { 
+    doc.fontSize(16).text(`TOTAL: ${totalAmountEuros}€`, { 
       underline: true,
       align: 'right'
     });
   } else {
-    doc.fontSize(16).text(`TOTAL: ${order.totalAmount}€`, { 
+    // order.totalAmount est en euros
+    const totalAmountEuros = order.totalAmount.toFixed(2);
+    doc.fontSize(16).text(`TOTAL: ${totalAmountEuros}€`, { 
       underline: true,
       align: 'right'
     });
@@ -368,14 +382,21 @@ const generateCreditNotePDF = async (order, user, refundAmount, refundId) => {
   
   // Si remboursement partiel, détailler
   if (refundAmount < order.totalAmount) {
-    doc.fontSize(12).text(`Montant original de la commande: ${order.totalAmount}€`);
-    doc.text(`Montant du remboursement partiel: ${refundAmount}€`);
-    doc.text(`Montant conservé: ${(order.totalAmount - refundAmount).toFixed(2)}€`);
+    // Les montants sont déjà en euros
+    const totalAmountEuros = order.totalAmount.toFixed(2);
+    const refundAmountEuros = refundAmount.toFixed(2);
+    const remainingAmountEuros = (order.totalAmount - refundAmount).toFixed(2);
+    
+    doc.fontSize(12).text(`Montant original de la commande: ${totalAmountEuros}€`);
+    doc.text(`Montant du remboursement partiel: ${refundAmountEuros}€`);
+    doc.text(`Montant conservé: ${remainingAmountEuros}€`);
   } else {
     // Remboursement total - afficher les produits
     if (order.OrderItems && order.OrderItems.length > 0) {
       order.OrderItems.forEach(item => {
-        doc.text(`${item.quantity} x ${item.productName} - ${item.price}€`);
+        // Utiliser le prix original du produit (AVANT promotion) en centimes, le convertir en euros
+        const itemPriceEuros = (item.productPrice / 100).toFixed(2);
+        doc.text(`${item.quantity} x ${item.productName} - ${itemPriceEuros}€`);
       });
     }
     
@@ -383,8 +404,12 @@ const generateCreditNotePDF = async (order, user, refundAmount, refundId) => {
     
     // Afficher les promotions si applicable
     if (order.promoCode && order.promoDiscount > 0) {
-      doc.text(`Sous-total original: ${order.originalAmount || order.totalAmount}€`);
-      doc.text(`Promotion appliquée (${order.promoCode}): -${order.promoDiscount}€`, { 
+      // order.originalAmount et order.promoDiscount sont en euros
+      const originalAmountEuros = (order.originalAmount || order.totalAmount).toFixed(2);
+      const promoDiscountEuros = order.promoDiscount.toFixed(2);
+      
+      doc.text(`Sous-total original: ${originalAmountEuros}€`);
+      doc.text(`Promotion appliquée (${order.promoCode}): -${promoDiscountEuros}€`, { 
         fillColor: 'green' 
       });
       doc.fillColor('black');
@@ -396,7 +421,9 @@ const generateCreditNotePDF = async (order, user, refundAmount, refundId) => {
   // Montant total du remboursement en évidence
   doc.fontSize(18);
   doc.fillColor('#dc2626');
-  doc.text(`MONTANT REMBOURSÉ: ${refundAmount}€`, { 
+  // refundAmount est déjà en euros
+  const refundAmountEuros = refundAmount.toFixed(2);
+  doc.text(`MONTANT REMBOURSÉ: ${refundAmountEuros}€`, { 
     underline: true,
     align: 'right'
   });

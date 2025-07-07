@@ -21,9 +21,14 @@
           </div>
           <button
             type="submit"
-            class="w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 rounded-lg duration-150"
+            :disabled="isLoading"
+            class="w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 rounded-lg duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
-            Demander la réinitialisation
+            <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            {{ isLoading ? 'Envoi en cours...' : 'Demander la réinitialisation' }}
           </button>
         </form>
 
@@ -39,10 +44,14 @@ import { useNotifications } from '../composables/useNotifications';
 export default defineComponent({
   name: 'ForgotPassword',
   setup() {
-    const { addNotification } = useNotifications();
+    const { showSuccess, showError } = useNotifications();
     const email = ref('');
+    const isLoading = ref(false);
 
     const requestPasswordReset = async () => {
+      if (isLoading.value) return;
+      
+      isLoading.value = true;
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/forgot-password`, {
           method: 'POST',
@@ -55,17 +64,24 @@ export default defineComponent({
         const data = await response.json();
 
         if (response.ok) {
-          addNotification('Email de réinitialisation du mot de passe envoyé. Veuillez vérifier votre email.', 'success');
+          showSuccess('Email envoyé', 'Un email de réinitialisation du mot de passe a été envoyé. Veuillez vérifier votre boîte de réception.');
+          email.value = ''; // Réinitialiser le formulaire
         } else {
-          addNotification(data.errors ? data.errors.map(err => err.msg).join(', ') : `La demande a échoué: ${data.message}`, 'error');
+          const errorMessage = data.errors 
+            ? data.errors.map(err => err.msg).join(', ') 
+            : data.message || 'Erreur lors de la demande de réinitialisation';
+          showError('Erreur', errorMessage);
         }
-      } catch (err) {
-        addNotification(`La demande a échoué: ${err.message}`, 'error');
+      } catch (error: any) {
+        showError('Erreur de connexion', error.message || 'Impossible de se connecter au serveur');
+      } finally {
+        isLoading.value = false;
       }
     };
 
     return {
       email,
+      isLoading,
       requestPasswordReset,
     };
   },

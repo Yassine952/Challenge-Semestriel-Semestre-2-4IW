@@ -27,19 +27,67 @@ const generateInvoicePDF = async (order, user) => {
   const pdfPath = path.join(invoiceDir, `invoice_${order.id}.pdf`);
   doc.pipe(fs.createWriteStream(pdfPath));
 
+  // En-tête
   doc.fontSize(25).text('Facture', { align: 'center' });
   doc.moveDown();
+  
+  // Informations de commande
   doc.fontSize(16).text(`Numéro de commande: ${order.id}`);
+  doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`);
   doc.text(`Nom: ${order.userName}`);
   doc.text(`Adresse: ${order.userAddress}`);
   doc.moveDown();
-  doc.text(`Montant total: ${order.totalAmount} €`);
-  doc.moveDown();
 
+  // Détails des produits
   doc.text('Détails de la commande:', { underline: true });
+  doc.moveDown(0.5);
+  
+  let subtotal = 0;
   order.OrderItems.forEach(item => {
-    doc.text(`${item.quantity} x ${item.productName} - ${item.price} €`);
+    // Utiliser le prix original du produit (AVANT promotion)
+    const unitPriceEuros = (item.productPrice / 100).toFixed(2);
+    const lineTotalEuros = (item.productPrice * item.quantity / 100).toFixed(2);
+    subtotal += item.productPrice * item.quantity; // Sous-total AVANT promotion en centimes
+    
+    // Afficher : quantité x nom - prix total de la ligne AVANT promotion
+    doc.fontSize(12).text(`${item.quantity} x ${item.productName} - ${lineTotalEuros}€`);
   });
+  
+  doc.moveDown();
+  doc.fontSize(14);
+  
+  // Calculs avec promotion
+  if (order.promoCode && order.promoDiscount > 0) {
+    // subtotal est en centimes (prix AVANT promotion)
+    // order.totalAmount, order.promoDiscount sont en euros
+    const subtotalEuros = (subtotal / 100).toFixed(2);
+    const totalAmountEuros = order.totalAmount.toFixed(2);
+    
+    // order.promoDiscount est déjà en euros
+    const promoDiscountEuros = order.promoDiscount.toFixed(2);
+    
+    doc.text(`Sous-total: ${subtotalEuros}€`);
+    doc.text(`Code promo (${order.promoCode}): -${promoDiscountEuros}€`, { 
+      fillColor: 'green' 
+    });
+    doc.fillColor('black');
+    doc.moveDown(0.5);
+    doc.fontSize(16).text(`TOTAL: ${totalAmountEuros}€`, { 
+      underline: true,
+      align: 'right'
+    });
+  } else {
+    // order.totalAmount est en euros
+    const totalAmountEuros = order.totalAmount.toFixed(2);
+    doc.fontSize(16).text(`TOTAL: ${totalAmountEuros}€`, { 
+      underline: true,
+      align: 'right'
+    });
+  }
+
+  // Pied de page
+  doc.moveDown();
+  doc.fontSize(10).text('Merci pour votre commande !', { align: 'center' });
 
   doc.end();
 
@@ -59,6 +107,9 @@ export const getOrders = async (req, res) => {
       userName: order.userName,
       userAddress: order.userAddress,
       totalAmount: order.totalAmount,
+      originalAmount: order.originalAmount,
+      promoCode: order.promoCode,
+      promoDiscount: order.promoDiscount,
       status: order.status,
       returnRequested: order.returnRequested,
       returnRequestDate: order.returnRequestDate,

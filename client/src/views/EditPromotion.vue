@@ -168,14 +168,40 @@
 
           <!-- Catégories (si applicable) -->
           <div v-if="applicationType === 'category'">
-            <label for="applicableCategories" class="font-medium">Catégories applicables</label>
-            <input
-              type="text"
-              v-model="applicableCategoriesText"
-              @input="handleCategoriesChange"
-              class="w-full mt-2 px-3 py-2 text-gray-500 bg-transparent outline-none border focus:border-indigo-600 shadow-sm rounded-lg"
-              placeholder="Ex: Electronics, Clothing, Books (séparées par des virgules)"
-            />
+            <label class="font-medium">Catégories concernées *</label>
+            <div v-if="categories.length > 0" class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto border rounded-md p-3 mt-2">
+              <div v-for="category in categories" :key="category" class="flex items-center">
+                <input
+                  type="checkbox"
+                  :id="`cat-${category}`"
+                  v-model="applicableCategories"
+                  :value="category"
+                  class="mr-2"
+                />
+                <label :for="`cat-${category}`" class="text-sm">{{ category }}</label>
+              </div>
+            </div>
+            <p v-else class="text-sm text-gray-500 mt-2">Chargement des catégories...</p>
+          </div>
+
+          <!-- Sélection des produits -->
+          <div v-if="applicationType === 'product'" class="space-y-2">
+            <label class="font-medium">Produits concernés *</label>
+            <div v-if="products.length > 0" class="max-h-40 overflow-y-auto border rounded-md p-3 mt-2">
+              <div v-for="product in products" :key="product.productId" class="flex items-center mb-2">
+                <input
+                  type="checkbox"
+                  :id="`prod-${product.productId}`"
+                  v-model="applicableProductIds"
+                  :value="product.productId"
+                  class="mr-2"
+                />
+                <label :for="`prod-${product.productId}`" class="text-sm">
+                  {{ product.name }} - {{ (product.price / 100).toFixed(2) }}€
+                </label>
+              </div>
+            </div>
+            <p v-else class="text-sm text-gray-500 mt-2">Chargement des produits...</p>
           </div>
 
           <!-- Statut -->
@@ -228,6 +254,8 @@ import { useRouter, useRoute } from 'vue-router';
 import { z } from 'zod';
 import { useForm } from '../composables/useForm';
 import { fetchPromotionById, updatePromotion } from '../services/promotionService';
+import { fetchCategories, fetchProducts } from '../services/productService';
+import { Product } from '../types/Product';
 
 const promotionSchema = z.object({
   code: z.string().min(1, 'Code est requis').max(20, 'Code trop long'),
@@ -241,6 +269,7 @@ const promotionSchema = z.object({
   usageLimit: z.number().nullable(),
   applicationType: z.enum(['all', 'category', 'product']),
   applicableCategories: z.array(z.string()).optional(),
+  applicableProductIds: z.array(z.number()).optional(),
   isActive: z.boolean(),
 }).refine((data) => {
   return new Date(data.startDate) < new Date(data.endDate);
@@ -256,7 +285,8 @@ export default defineComponent({
     const route = useRoute();
     const loading = ref(true);
     const promotion = ref<any>(null);
-    const applicableCategoriesText = ref('');
+    const categories = ref<string[]>([]);
+    const products = ref<Product[]>([]);
 
     const {
       values,
@@ -270,6 +300,8 @@ export default defineComponent({
       endDate,
       usageLimit,
       applicationType,
+      applicableCategories,
+      applicableProductIds,
       isActive,
       codeError,
       descriptionError,
@@ -292,6 +324,7 @@ export default defineComponent({
         usageLimit: null as number | null,
         applicationType: 'all' as 'all' | 'category' | 'product',
         applicableCategories: [] as string[],
+        applicableProductIds: [] as number[],
         isActive: true,
       },
       schema: promotionSchema,
@@ -306,39 +339,53 @@ export default defineComponent({
       },
     });
 
-    const handleCategoriesChange = (event: Event) => {
-      const target = event.target as HTMLInputElement;
-      applicableCategoriesText.value = target.value;
-      const categories = target.value
-        .split(',')
-        .map(cat => cat.trim())
-        .filter(cat => cat.length > 0);
-      handleChange('applicableCategories', categories);
+    const loadData = async () => {
+      try {
+        const [categoriesData, productsData] = await Promise.all([
+          fetchCategories(),
+          fetchProducts()
+        ]);
+        categories.value = categoriesData;
+        products.value = productsData;
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+      }
     };
 
     const loadPromotion = async () => {
       try {
         loading.value = true;
-        const promotionId = parseInt(route.params.id as string);
-        const data = await fetchPromotionById(promotionId);
-        promotion.value = data;
+        
+        // Charger les données de base et la promotion en parallèle
+        const [_, promotionData] = await Promise.all([
+          loadData(),
+          (async () => {
+            const promotionId = parseInt(route.params.id as string);
+            return await fetchPromotionById(promotionId);
+          })()
+        ]);
+        
+        promotion.value = promotionData;
 
         // Remplir le formulaire
-        handleChange('code', data.code);
-        handleChange('description', data.description);
-        handleChange('discountType', data.discountType);
-        handleChange('discountValue', data.discountValue);
-        handleChange('minOrderAmount', data.minOrderAmount || 0);
-        handleChange('maxDiscountAmount', data.maxDiscountAmount);
-        handleChange('startDate', new Date(data.startDate).toISOString().slice(0, 16));
-        handleChange('endDate', new Date(data.endDate).toISOString().slice(0, 16));
-        handleChange('usageLimit', data.usageLimit);
-        handleChange('applicationType', data.applicationType);
-        handleChange('isActive', data.isActive);
+        handleChange('code', promotionData.code);
+        handleChange('description', promotionData.description);
+        handleChange('discountType', promotionData.discountType);
+        handleChange('discountValue', promotionData.discountValue);
+        handleChange('minOrderAmount', promotionData.minOrderAmount || 0);
+        handleChange('maxDiscountAmount', promotionData.maxDiscountAmount);
+        handleChange('startDate', new Date(promotionData.startDate).toISOString().slice(0, 16));
+        handleChange('endDate', new Date(promotionData.endDate).toISOString().slice(0, 16));
+        handleChange('usageLimit', promotionData.usageLimit);
+        handleChange('applicationType', promotionData.applicationType);
+        handleChange('isActive', promotionData.isActive);
 
-        if (data.applicableCategories && data.applicableCategories.length > 0) {
-          applicableCategoriesText.value = data.applicableCategories.join(', ');
-          handleChange('applicableCategories', data.applicableCategories);
+        if (promotionData.applicableCategories && promotionData.applicableCategories.length > 0) {
+          handleChange('applicableCategories', promotionData.applicableCategories);
+        }
+        
+        if (promotionData.applicableProductIds && promotionData.applicableProductIds.length > 0) {
+          handleChange('applicableProductIds', promotionData.applicableProductIds);
         }
       } catch (error) {
         console.error('Erreur lors du chargement:', error);
@@ -352,7 +399,8 @@ export default defineComponent({
     return {
       loading,
       promotion,
-      applicableCategoriesText,
+      categories,
+      products,
       code,
       description,
       discountType,
@@ -363,6 +411,8 @@ export default defineComponent({
       endDate,
       usageLimit,
       applicationType,
+      applicableCategories,
+      applicableProductIds,
       isActive,
       codeError,
       descriptionError,
@@ -372,7 +422,6 @@ export default defineComponent({
       serverError,
       handleChange,
       handleSubmit,
-      handleCategoriesChange,
     };
   },
 });

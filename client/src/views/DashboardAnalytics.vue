@@ -15,6 +15,8 @@
               @change="refreshAllWidgets"
               class="px-4 py-2 border border-gray-300 rounded-md"
             >
+              <option value="5m">5 dernières minutes</option>
+              <option value="1h">1 dernière heure</option>
               <option value="7d">7 derniers jours</option>
               <option value="30d">30 derniers jours</option>
               <option value="90d">90 derniers jours</option>

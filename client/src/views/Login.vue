@@ -57,7 +57,7 @@ import { useNotifications } from '../composables/useNotifications';
 export default defineComponent({
   name: 'Login',
   setup() {
-    const { addNotification } = useNotifications();
+    const { showSuccess, showError } = useNotifications();
     const email = ref('');
     const password = ref('');
     const router = useRouter();
@@ -82,12 +82,14 @@ export default defineComponent({
           const decodedToken = jwtDecode<{ role: string }>(data.token);
           localStorage.setItem('role', decodedToken.role);
           window.dispatchEvent(new CustomEvent('loginStatusChanged'));
+          
+          showSuccess('Connexion réussie', 'Vous êtes maintenant connecté');
           router.push('/');
         } else {
-          addNotification(`Échec de la connexion : ${data.message}`, 'error');
+          showError('Échec de la connexion', data.message || 'Erreur inconnue');
         }
       } catch (err) {
-        addNotification(`Échec de la connexion : ${err.message}`, 'error');
+        showError('Erreur de connexion', err.message || 'Impossible de se connecter au serveur');
       }
     };
 

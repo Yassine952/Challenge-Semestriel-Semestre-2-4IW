@@ -6,13 +6,21 @@ import Cart from '../models/Cart.js';
 import mongoose from 'mongoose';
 import { sendNewProductAlert, sendLowStockAlert, sendRestockAlert, sendPriceChangeAlert, checkProductStockThreshold } from './alertController.js';
 import { updateProductStockRelative, recordStockMovement } from '../services/hybridStockService.js';
+import { deleteProductImage } from '../middleware/upload.js';
 
 export const createProduct = async (req, res) => {
   try {
     console.log('Creating product with data:', req.body);
+    console.log('Uploaded file:', req.file);
     
     const productData = { ...req.body };
     console.log(`Prix reçu: ${productData.price} (format: ${typeof productData.price})`);
+    
+    // Ajouter l'URL de l'image si un fichier a été uploadé
+    if (req.file) {
+      productData.imageUrl = `/uploads/products/${req.file.filename}`;
+      console.log(`Image uploadée: ${productData.imageUrl}`);
+    }
     
     // Convertir le prix en centimes si reçu en euros
     if (productData.price !== undefined) {
@@ -59,6 +67,12 @@ export const createProduct = async (req, res) => {
     res.status(201).json({ product, productMongo });
   } catch (error) {
     console.error('Error creating product:', error);
+    
+    // Supprimer l'image uploadée en cas d'erreur
+    if (req.file) {
+      deleteProductImage(req.file.path);
+    }
+    
     res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 };
@@ -101,12 +115,25 @@ export const updateProduct = async (req, res) => {
 
     const oldStock = product.stock;
     const oldPrice = product.price;
+    const oldImageUrl = product.imageUrl;
     const newStock = req.body.stock;
     const newPrice = req.body.price;
 
     // Le prix est déjà converti en centimes côté client, pas de conversion nécessaire
     const updateData = { ...req.body };
     console.log(`Mise à jour produit ${productId} - Prix reçu: ${updateData.price} centimes`);
+    
+    // Gérer l'image uploadée
+    if (req.file) {
+      updateData.imageUrl = `/uploads/products/${req.file.filename}`;
+      console.log(`Nouvelle image uploadée: ${updateData.imageUrl}`);
+      
+      // Supprimer l'ancienne image si elle existe
+      if (oldImageUrl) {
+        const oldImagePath = `uploads/products/${oldImageUrl.split('/').pop()}`;
+        deleteProductImage(oldImagePath);
+      }
+    }
     
     if (updateData.price !== undefined) {
       updateData.price = Math.round(parseFloat(updateData.price)); // S'assurer que c'est un entier
@@ -146,6 +173,12 @@ export const updateProduct = async (req, res) => {
         console.log(`✅ Stock mis à jour (ABSOLU) - Produit ${productId}: ${oldStock} → ${newStock}`);
       } catch (stockError) {
         console.error('❌ Erreur mise à jour stock:', stockError);
+        
+        // Supprimer la nouvelle image en cas d'erreur
+        if (req.file) {
+          deleteProductImage(req.file.path);
+        }
+        
         throw stockError;
       }
     } else {
@@ -186,6 +219,12 @@ export const updateProduct = async (req, res) => {
     res.status(200).json({ product, mongoProduct });
   } catch (error) {
     console.error('Error updating product:', error);
+    
+    // Supprimer la nouvelle image en cas d'erreur
+    if (req.file) {
+      deleteProductImage(req.file.path);
+    }
+    
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
@@ -199,6 +238,12 @@ export const deleteProduct = async (req, res) => {
 
     const product = await Product.findByPk(productId);
     if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
+
+    // Supprimer l'image associée si elle existe
+    if (product.imageUrl) {
+      const imagePath = `uploads/products/${product.imageUrl.split('/').pop()}`;
+      deleteProductImage(imagePath);
+    }
 
     const cartItems = await CartItem.findAll({ where: { productId: product.id } });
 

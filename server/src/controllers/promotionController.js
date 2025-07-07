@@ -356,4 +356,26 @@ export const getActivePromotionsForProduct = async (req, res) => {
     console.error('Error fetching active promotions:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
+};
+
+// Récupérer toutes les promotions actives (route publique pour les utilisateurs)
+export const getActivePromotions = async (req, res) => {
+  try {
+    const now = new Date();
+    
+    const query = {
+      isActive: true,
+      startDate: { $lte: now },
+      endDate: { $gte: now }
+    };
+    
+    const promotions = await PromotionMongo.find(query)
+      .select('code description discountType discountValue maxDiscountAmount minOrderAmount applicationType applicableCategories applicableProductIds startDate endDate')
+      .sort({ discountValue: -1 });
+    
+    res.status(200).json(promotions);
+  } catch (error) {
+    console.error('Error fetching active promotions:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
 }; 

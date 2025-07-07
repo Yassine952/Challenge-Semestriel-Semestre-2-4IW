@@ -101,7 +101,7 @@ import { useNotifications } from '../composables/useNotifications';
 export default defineComponent({
   name: 'Register',
   setup() {
-    const { addNotification } = useNotifications();
+    const { showSuccess, showError } = useNotifications();
     const firstName = ref('');
     const lastName = ref('');
     const email = ref('');
@@ -113,12 +113,18 @@ export default defineComponent({
     const register = async () => {
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
       if (!passwordRegex.test(password.value)) {
-        addNotification('Le mot de passe doit comporter au moins 12 caractères et inclure un mélange de lettres, de chiffres et de symboles.', 'error');
+        showError(
+          'Mot de passe invalide', 
+          'Le mot de passe doit comporter au moins 12 caractères et inclure un mélange de lettres, de chiffres et de symboles.'
+        );
         return;
       }
 
       if (!acceptTerms.value) {
-        addNotification('Vous devez accepter la politique de confidentialité et les conditions générales de vente.', 'error');
+        showError(
+          'Conditions non acceptées', 
+          'Vous devez accepter la politique de confidentialité et les conditions générales de vente.'
+        );
         return;
       }
 
@@ -143,15 +149,24 @@ export default defineComponent({
         console.log('Données reçues:', data);
 
         if (response.ok) {
-          addNotification('Inscription réussie ! Vous allez recevoir un mail pour confirmer votre compte.', 'success');
+          showSuccess(
+            'Inscription réussie !', 
+            'Vous allez recevoir un mail pour confirmer votre compte.'
+          );
           window.dispatchEvent(new CustomEvent('loginStatusChanged'));
           router.push('/login');
         } else {
-          addNotification(`L'inscription a échoué : ${data.errors ? data.errors[0].msg : data.message}`, 'error');
+          showError(
+            'Échec de l\'inscription', 
+            data.errors ? data.errors[0].msg : data.message
+          );
         }
       } catch (err) {
         console.error('Erreur lors de l\'inscription:', err);
-        addNotification(`L'inscription a échoué : ${err.message}`, 'error');
+        showError(
+          'Erreur de connexion', 
+          err.message || 'Impossible de se connecter au serveur'
+        );
       }
     };
 

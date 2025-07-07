@@ -209,7 +209,7 @@
         <!-- Zone des résultats -->
         <div class="lg:col-span-3">
           <!-- Barre de statut -->
-          <div class="bg-white rounded-lg shadow-sm p-4 mb-6 flex items-center justify-between">
+          <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
             <div class="flex items-center">
               <span class="text-gray-600">
                 {{ products.length }} produit{{ products.length > 1 ? 's' : '' }} trouvé{{ products.length > 1 ? 's' : '' }}
@@ -220,18 +220,6 @@
                 </svg>
                 <span class="text-sm font-medium">Filtres actifs</span>
               </div>
-            </div>
-            <div class="flex items-center space-x-2">
-              <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                </svg>
-              </button>
-              <button class="p-2 text-gray-600 bg-gray-100 rounded-lg">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                </svg>
-              </button>
             </div>
           </div>
 
@@ -266,11 +254,23 @@
                 </span>
               </div>
 
-              <!-- Image placeholder -->
-              <div class="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <!-- Image du produit -->
+              <div class="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
+                <img 
+                  v-if="product.imageUrl" 
+                  :src="getImageUrl(product.imageUrl)" 
+                  :alt="product.name"
+                  class="w-full h-full object-cover"
+                  @error="handleImageError"
+                  @load="handleImageLoad"
+                />
+                <svg v-else class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                 </svg>
+                <!-- Debug info -->
+                <div v-if="false" class="absolute top-0 left-0 bg-black bg-opacity-50 text-white text-xs p-1">
+                  Image: {{ product.imageUrl || 'AUCUNE' }}
+                </div>
               </div>
 
               <!-- Contenu -->
@@ -626,6 +626,37 @@ export default defineComponent({
       handleSubmit();
     };
 
+    // Fonction pour construire l'URL des images
+    const getImageUrl = (imageUrl: string) => {
+      if (!imageUrl) return '';
+      if (imageUrl.startsWith('http')) return imageUrl;
+      
+      // Construire l'URL de base sans /api pour les images
+      const baseUrl = import.meta.env.VITE_API_URL.replace('/api', '');
+      const fullUrl = `${baseUrl}${imageUrl}`;
+      console.log('Image URL construite:', fullUrl);
+      return fullUrl;
+    };
+
+    // Gestionnaire d'erreur pour les images
+    const handleImageError = (event: Event) => {
+      const target = event.target as HTMLImageElement;
+      target.style.display = 'none';
+      // Afficher l'icône SVG de fallback
+      const parent = target.parentElement;
+      if (parent) {
+        const svg = parent.querySelector('svg');
+        if (svg) {
+          svg.style.display = 'block';
+        }
+      }
+    };
+
+    // Gestionnaire de succès pour les images
+    const handleImageLoad = (event: Event) => {
+      console.log('✅ Image chargée avec succès:', event);
+    };
+
     // Fonction pour ajouter un produit au panier
     const addToCart = async (product: Product) => {
       try {
@@ -746,6 +777,9 @@ export default defineComponent({
       handleManualSubmit,
       handlePriceChange,
       handleGlobalSearchChange,
+      getImageUrl,
+      handleImageError,
+      handleImageLoad,
       addToCart,
       clearAllFilters,
     };

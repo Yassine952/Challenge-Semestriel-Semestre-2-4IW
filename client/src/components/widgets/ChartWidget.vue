@@ -26,6 +26,8 @@
         @change="$emit('period-change', selectedPeriod)"
         class="px-3 py-1 border border-gray-300 rounded-md text-sm"
       >
+        <option value="5m">5 minutes</option>
+        <option value="1h">1 heure</option>
         <option value="7d">7 jours</option>
         <option value="30d">30 jours</option>
         <option value="90d">90 jours</option>

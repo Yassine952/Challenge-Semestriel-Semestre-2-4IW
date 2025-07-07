@@ -9,7 +9,8 @@ const ProductSchema = new mongoose.Schema({
   stock: { type: Number, required: true },
   category: { type: String, required: true },
   brand: { type: String, required: false },
-  onSale: { type: Boolean, default: false }
+  onSale: { type: Boolean, default: false },
+  imageUrl: { type: String, required: false }
 });
 
 // Index pour optimiser les recherches facettées

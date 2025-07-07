@@ -48,7 +48,7 @@ const routes: Array<RouteRecordRaw> = [
   { path: '/admin-dashboard', name: 'AdminDashboard', component: AdminDashboard, meta: { requiresAuth: true, requiresRole: 'ROLE_ADMIN' } },
   { path: '/dashboard-analytics', name: 'DashboardAnalytics', component: DashboardAnalytics, meta: { requiresAuth: true, requiresRole: 'ROLE_ADMIN' } },
   { path: '/stock-dashboard', name: 'StockDashboard', component: StockDashboard, meta: { requiresAuth: true, requiresRole: ['ROLE_STORE_KEEPER', 'ROLE_ADMIN'] } },
-  { path: '/compta-dashboard', name: 'ComptaDashboard', component: ComptaDashboard, meta: { requiresAuth: true, requiresRole: 'ROLE_COMPTA' } },
+  { path: '/compta-dashboard', name: 'ComptaDashboard', component: ComptaDashboard, meta: { requiresAuth: true, requiresRole: ['ROLE_COMPTA', 'ROLE_ADMIN'] } },
   { path: '/newsletter-manager', name: 'NewsletterManager', component: NewsletterManager, meta: { requiresAuth: true, requiresRole: ['ROLE_STORE_KEEPER', 'ROLE_ADMIN'] } },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }
   

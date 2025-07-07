@@ -17,10 +17,16 @@ export const createPromotion = async (promotion: Omit<Promotion, 'promotionId' |
 
 // Récupérer toutes les promotions
 export const fetchPromotions = async (filters?: { active?: boolean; expired?: boolean }): Promise<Promotion[]> => {
+  // Si on veut les promotions actives, utiliser la route publique
+  if (filters?.active) {
+    const response = await axios.get(`${API_URL}/active-all`);
+    return response.data;
+  }
+  
+  // Sinon, utiliser la route protégée pour les admins
   const token = localStorage.getItem('token');
   const params = new URLSearchParams();
   
-  if (filters?.active) params.append('active', 'true');
   if (filters?.expired) params.append('expired', 'true');
   
   const response = await axios.get(`${API_URL}?${params.toString()}`, {

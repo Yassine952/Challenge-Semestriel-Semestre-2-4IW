@@ -7,7 +7,8 @@ import {
   applyPromoCode,
   updatePromotion,
   deletePromotion,
-  getActivePromotionsForProduct
+  getActivePromotionsForProduct,
+  getActivePromotions
 } from '../controllers/promotionController.js';
 import { authenticateToken, authorize } from '../middleware/auth.js';
 
@@ -16,6 +17,7 @@ const router = express.Router();
 // Routes publiques
 router.post('/validate', validatePromoCode); // Valider un code promo
 router.get('/active', getActivePromotionsForProduct); // Promotions actives pour un produit
+router.get('/active-all', getActivePromotions); // Toutes les promotions actives (pour les utilisateurs)
 
 // Routes protégées - Admin/Store Keeper
 router.post('/', authenticateToken, authorize(['ROLE_ADMIN', 'ROLE_STORE_KEEPER']), createPromotion);

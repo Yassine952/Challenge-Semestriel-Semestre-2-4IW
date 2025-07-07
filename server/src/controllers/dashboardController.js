@@ -4,6 +4,12 @@ const getPeriodFilter = (period) => {
   let startDate;
 
   switch (period) {
+    case '5m':
+      startDate = new Date(now.getTime() - 5 * 60 * 1000);
+      break;
+    case '1h':
+      startDate = new Date(now.getTime() - 60 * 60 * 1000);
+      break;
     case '7d':
       startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       break;
@@ -28,6 +34,14 @@ const getPreviousPeriodFilter = (period) => {
   let startDate, endDate;
 
   switch (period) {
+    case '5m':
+      endDate = new Date(now.getTime() - 5 * 60 * 1000);
+      startDate = new Date(now.getTime() - 10 * 60 * 1000);
+      break;
+    case '1h':
+      endDate = new Date(now.getTime() - 60 * 60 * 1000);
+      startDate = new Date(now.getTime() - 120 * 60 * 1000);
+      break;
     case '7d':
       endDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       startDate = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
@@ -141,16 +155,46 @@ export const getOrdersOverTime = async (req, res) => {
     const orders = await OrderMongo.find(periodFilter, { createdAt: 1 }).sort({ createdAt: 1 });
 
     const groupedData = {};
+    
+    // Adapter la granularité selon la période
     orders.forEach(order => {
-      const date = order.createdAt.toISOString().split('T')[0];
-      groupedData[date] = (groupedData[date] || 0) + 1;
+      let timeKey;
+      if (period === '5m') {
+        // Granularité par minute
+        timeKey = order.createdAt.toISOString().substring(0, 16); // YYYY-MM-DDTHH:mm
+      } else if (period === '1h') {
+        // Granularité par 5 minutes
+        const date = new Date(order.createdAt);
+        const minutes = Math.floor(date.getMinutes() / 5) * 5;
+        date.setMinutes(minutes, 0, 0);
+        timeKey = date.toISOString().substring(0, 16); // YYYY-MM-DDTHH:mm
+      } else {
+        // Granularité par jour pour les autres périodes
+        timeKey = order.createdAt.toISOString().split('T')[0];
+      }
+      
+      groupedData[timeKey] = (groupedData[timeKey] || 0) + 1;
     });
 
     const labels = Object.keys(groupedData).sort();
     const data = labels.map(label => groupedData[label]);
 
+    // Adapter le format des labels pour l'affichage
+    const formattedLabels = labels.map(label => {
+      if (period === '5m' || period === '1h') {
+        // Format heure:minute
+        return new Date(label).toLocaleTimeString('fr-FR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+      } else {
+        // Format date
+        return new Date(label).toLocaleDateString('fr-FR');
+      }
+    });
+
     res.json({
-      labels,
+      labels: formattedLabels,
       datasets: [{
         label: 'Commandes',
         data,
@@ -178,16 +222,46 @@ export const getRevenueOverTime = async (req, res) => {
     ).sort({ createdAt: 1 });
 
     const groupedData = {};
+    
+    // Adapter la granularité selon la période
     orders.forEach(order => {
-      const date = order.createdAt.toISOString().split('T')[0];
-      groupedData[date] = (groupedData[date] || 0) + parseFloat(order.totalAmount);
+      let timeKey;
+      if (period === '5m') {
+        // Granularité par minute
+        timeKey = order.createdAt.toISOString().substring(0, 16); // YYYY-MM-DDTHH:mm
+      } else if (period === '1h') {
+        // Granularité par 5 minutes
+        const date = new Date(order.createdAt);
+        const minutes = Math.floor(date.getMinutes() / 5) * 5;
+        date.setMinutes(minutes, 0, 0);
+        timeKey = date.toISOString().substring(0, 16); // YYYY-MM-DDTHH:mm
+      } else {
+        // Granularité par jour pour les autres périodes
+        timeKey = order.createdAt.toISOString().split('T')[0];
+      }
+      
+      groupedData[timeKey] = (groupedData[timeKey] || 0) + parseFloat(order.totalAmount);
     });
 
     const labels = Object.keys(groupedData).sort();
     const data = labels.map(label => Math.round(groupedData[label] * 100) / 100);
 
+    // Adapter le format des labels pour l'affichage
+    const formattedLabels = labels.map(label => {
+      if (period === '5m' || period === '1h') {
+        // Format heure:minute
+        return new Date(label).toLocaleTimeString('fr-FR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+      } else {
+        // Format date
+        return new Date(label).toLocaleDateString('fr-FR');
+      }
+    });
+
     res.json({
-      labels,
+      labels: formattedLabels,
       datasets: [{
         label: 'Chiffre d\'affaires (€)',
         data,
@@ -371,6 +445,12 @@ export const getUsersOverTime = async (req, res) => {
     const now = new Date();
     let startDate;
     switch (period) {
+      case '5m':
+        startDate = new Date(now.getTime() - 5 * 60 * 1000);
+        break;
+      case '1h':
+        startDate = new Date(now.getTime() - 60 * 60 * 1000);
+        break;
       case '7d':
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         break;
@@ -398,16 +478,46 @@ export const getUsersOverTime = async (req, res) => {
     });
 
     const groupedData = {};
+    
+    // Adapter la granularité selon la période
     users.forEach(user => {
-      const date = user.createdAt.toISOString().split('T')[0];
-      groupedData[date] = (groupedData[date] || 0) + 1;
+      let timeKey;
+      if (period === '5m') {
+        // Granularité par minute
+        timeKey = user.createdAt.toISOString().substring(0, 16); // YYYY-MM-DDTHH:mm
+      } else if (period === '1h') {
+        // Granularité par 5 minutes
+        const date = new Date(user.createdAt);
+        const minutes = Math.floor(date.getMinutes() / 5) * 5;
+        date.setMinutes(minutes, 0, 0);
+        timeKey = date.toISOString().substring(0, 16); // YYYY-MM-DDTHH:mm
+      } else {
+        // Granularité par jour pour les autres périodes
+        timeKey = user.createdAt.toISOString().split('T')[0];
+      }
+      
+      groupedData[timeKey] = (groupedData[timeKey] || 0) + 1;
     });
 
     const labels = Object.keys(groupedData).sort();
     const data = labels.map(label => groupedData[label]);
 
+    // Adapter le format des labels pour l'affichage
+    const formattedLabels = labels.map(label => {
+      if (period === '5m' || period === '1h') {
+        // Format heure:minute
+        return new Date(label).toLocaleTimeString('fr-FR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+      } else {
+        // Format date
+        return new Date(label).toLocaleDateString('fr-FR');
+      }
+    });
+
     res.json({
-      labels,
+      labels: formattedLabels,
       datasets: [{
         label: 'Nouveaux utilisateurs',
         data,

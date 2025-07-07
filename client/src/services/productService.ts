@@ -10,7 +10,23 @@ const apiClient = axios.create({
   },
 });
 
+// Client spécial pour les uploads de fichiers
+const uploadClient = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'multipart/form-data',
+  },
+});
+
 apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+uploadClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -40,14 +56,24 @@ export const fetchCategories = async (): Promise<string[]> => {
 
 // Fonction supprimée - recherche par marque désactivée
 
-export const createProduct = async (product: Product): Promise<Product> => {
-  const response = await apiClient.post('/', product);
-  return response.data;
+export const createProduct = async (productData: Product | FormData): Promise<Product> => {
+  if (productData instanceof FormData) {
+    const response = await uploadClient.post('/', productData);
+    return response.data;
+  } else {
+    const response = await apiClient.post('/', productData);
+    return response.data;
+  }
 };
 
-export const updateProduct = async (id: number, product: Product): Promise<Product> => {
-  const response = await apiClient.put(`/${id}`, product);
-  return response.data;
+export const updateProduct = async (id: number, productData: Product | FormData): Promise<Product> => {
+  if (productData instanceof FormData) {
+    const response = await uploadClient.put(`/${id}`, productData);
+    return response.data;
+  } else {
+    const response = await apiClient.put(`/${id}`, productData);
+    return response.data;
+  }
 };
 
 export const deleteProduct = async (id: number): Promise<void> => {

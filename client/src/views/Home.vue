@@ -86,9 +86,16 @@
             class="group bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/50 dark:border-neutral-700/50 rounded-2xl shadow-lg hover:shadow-xl p-6 hover:scale-105 transition-all duration-300 ease-in-out hover:-translate-y-1 opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]"
             :style="{ animationDelay: `${index * 0.1}s` }"
           >
-            <!-- Image placeholder avec gradient -->
-            <div class="w-full h-48 bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-700 dark:to-neutral-800 rounded-xl mb-6 flex items-center justify-center group-hover:from-primary-100 group-hover:to-secondary-100 dark:group-hover:from-primary-900/20 dark:group-hover:to-secondary-900/20 transition-all duration-300">
-              <svg class="w-16 h-16 text-neutral-400 dark:text-neutral-600 group-hover:text-primary-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Image avec gestion d'erreur -->
+            <div class="w-full h-48 bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-700 dark:to-neutral-800 rounded-xl mb-6 flex items-center justify-center group-hover:from-primary-100 group-hover:to-secondary-100 dark:group-hover:from-primary-900/20 dark:group-hover:to-secondary-900/20 transition-all duration-300 overflow-hidden">
+              <img 
+                v-if="product.imageUrl" 
+                :src="getImageUrl(product.imageUrl)" 
+                :alt="product.name"
+                class="w-full h-full object-cover rounded-xl"
+                @error="handleImageError"
+              />
+              <svg v-else class="w-16 h-16 text-neutral-400 dark:text-neutral-600 group-hover:text-primary-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
             </div>
@@ -234,8 +241,14 @@ export default defineComponent({
     const loadProducts = async () => {
       try {
       const allProducts = await fetchProducts();
+        console.log('Produits récupérés:', allProducts);
         // Limiter à 6 produits vedettes pour un affichage plus clean
         featuredProducts.value = allProducts.filter(product => product.onSale).slice(0, 6);
+        console.log('Produits vedettes avec images:', featuredProducts.value.map(p => ({
+          name: p.name,
+          imageUrl: p.imageUrl,
+          fullImageUrl: getImageUrl(p.imageUrl || '')
+        })));
       } catch (error) {
         console.error('Erreur lors du chargement des produits:', error);
         showError('❌ Erreur', 'Impossible de charger les produits');
@@ -268,6 +281,30 @@ export default defineComponent({
       }
     };
 
+    const getImageUrl = (imageUrl: string) => {
+      if (!imageUrl) return '';
+      if (imageUrl.startsWith('http')) return imageUrl;
+      
+      // Construire l'URL de base sans /api pour les images
+      const baseUrl = import.meta.env.VITE_API_URL.replace('/api', '');
+      const fullUrl = `${baseUrl}${imageUrl}`;
+      console.log('Image URL construite:', fullUrl);
+      return fullUrl;
+    };
+
+    const handleImageError = (event: Event) => {
+      const target = event.target as HTMLImageElement;
+      target.style.display = 'none';
+      // Afficher l'icône SVG de fallback
+      const parent = target.parentElement;
+      if (parent) {
+        const svg = parent.querySelector('svg');
+        if (svg) {
+          svg.style.display = 'block';
+        }
+      }
+    };
+
     onMounted(loadProducts);
 
     return {
@@ -276,6 +313,8 @@ export default defineComponent({
       isAuthenticated,
       addToCartHandler,
       scrollToProducts,
+      getImageUrl,
+      handleImageError,
     };
   },
 });
